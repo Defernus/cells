@@ -22,8 +22,10 @@
 
     const initialGrid = new Uint32Array(width * height);
     initialGrid[0] = 255;
-    initialGrid[1] = 255;
-    initialGrid[2] = 255;
+    initialGrid[width + 1] = 255;
+    initialGrid[width + 2] = 255;
+    initialGrid[width * 2 + 0] = 255;
+    initialGrid[width * 2 + 1] = 255;
 
     const gridShader = createGridShader({
       device,
