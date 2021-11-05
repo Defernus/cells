@@ -12,6 +12,7 @@ module.exports = {
     "no-labels": 0,
     "no-unused-vars": "error",
     "no-restricted-syntax": 0,
+    "no-plusplus": "off",
     "@typescript-eslint/lines-between-class-members": "off",
     "no-bitwise": "off",
   },

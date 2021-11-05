@@ -18,7 +18,7 @@ class ScreenBuffer {
     this.device = device;
 
     this.gpuBuffer = device.createBuffer({
-      size: width * height * Uint8Array.BYTES_PER_ELEMENT,
+      size: width * height * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
   }

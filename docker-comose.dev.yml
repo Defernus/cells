@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   cells-web:
-    build: "./cells-web"
+    build:
+      context: ./cells-web
+      dockerfile: Dockerfile.dev
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik
@@ -10,6 +12,8 @@ services:
       - traefik.http.routers.dev-cells-web.entrypoints=https
       - traefik.http.routers.dev-cells-web.tls.certresolver=simple-resolver
       - traefik.http.services.dev-cells-web.loadbalancer.server.port=8132
+    volumes:
+      - ./cells-web:/app
     networks:
       - traefik
 
