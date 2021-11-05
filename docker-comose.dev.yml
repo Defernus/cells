@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  cells-web:
+    build: "./cells-web"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.dev-cells-web.rule=Host(`cells.lavrentev.dev`)
+      - traefik.http.routers.dev-cells-web.entrypoints=https
+      - traefik.http.routers.dev-cells-web.tls.certresolver=simple-resolver
+      - traefik.http.services.dev-cells-web.loadbalancer.server.port=8132
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external:
+      name: traefik

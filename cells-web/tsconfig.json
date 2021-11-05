@@ -1,0 +1,17 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "utils": ["src/utils"],
+      "components": ["src/components"],
+      "hooks": ["src/hooks"],
+      "constants": ["src/constants"],
+    },
+    "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types"]
+	},
+
+  "include": ["src/**/*"],
+  "exclude": ["node_modules/*", "__sapper__/*", "public/*"]
+}
