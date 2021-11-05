@@ -14,8 +14,6 @@ const createGridShader = (props: Props): GPUShaderModule => {
   const {
     device,
     bindingGroup = 0,
-    inpGridBufferBinding = 0,
-    outGridBufferBinding = 1,
     width, height,
   } = props;
 
@@ -25,8 +23,8 @@ const createGridShader = (props: Props): GPUShaderModule => {
   numbers: array<u32>;
 };
 
-[[group(${bindingGroup}), binding(${inpGridBufferBinding})]] var<storage, read> inpGrid: Grid;
-[[group(${bindingGroup}), binding(${outGridBufferBinding})]] var<storage, write> outGrid: Grid;
+[[group(${bindingGroup}), binding(0)]] var<storage, read> inpGrid: Grid;
+[[group(${bindingGroup}), binding(1)]] var<storage, write> outGrid: Grid;
 
 fn mod(a: i32, b: i32) -> i32 {
   return ((a % b) + b) % b;
