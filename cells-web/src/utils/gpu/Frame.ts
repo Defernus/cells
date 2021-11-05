@@ -63,6 +63,20 @@ class Frame {
     });
   }
 
+  createResultBuffer(commandEncoder: GPUCommandEncoder): GPUBuffer {
+    const resultBuffer = this.device.createBuffer({
+      size: this.bufferSize,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+    commandEncoder.copyBufferToBuffer(
+      this.buffer,
+      0,
+      resultBuffer,
+      0,
+      this.bufferSize,
+    );
+    return resultBuffer;
+  }
 
   swapBuffer(): void {
     this.currentBindGroup = (this.currentBindGroup + 1) % 2;
@@ -74,6 +88,10 @@ class Frame {
 
   get buffer(): GPUBuffer {
     return this.buffers[(this.currentBindGroup + 1) % 2];
+  }
+
+  get bufferSize(): number {
+    return this.width * this.height * Uint32Array.BYTES_PER_ELEMENT;
   }
 }
 

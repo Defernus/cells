@@ -49,8 +49,6 @@
       initialGrid,
       computePipeline,
     });
-
-
   });
 
   const update = async () => {
@@ -61,28 +59,16 @@
     passEncoder.dispatch(Math.ceil(width / 8), Math.ceil(height / 8));
     passEncoder.endPass();
 
-    const resultMatrixBufferSize = width * height * Uint32Array.BYTES_PER_ELEMENT;
-    const gpuReadBuffer = device.createBuffer({
-      size: resultMatrixBufferSize,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    });
+    const resultBuffer = frame.createResultBuffer(commandEncoder);
 
-    commandEncoder.copyBufferToBuffer(
-      frame.buffer,
-      0,
-      gpuReadBuffer,
-      0,
-      resultMatrixBufferSize,
-    );
-
-    // Submit GPU commands.
     const gpuCommands = commandEncoder.finish();
     device.queue.submit([gpuCommands]);
 
-    await gpuReadBuffer.mapAsync(GPUMapMode.READ);
-    const arrayBuffer = gpuReadBuffer.getMappedRange();
+    await resultBuffer.mapAsync(GPUMapMode.READ);
+    const result = new Uint32Array(resultBuffer.getMappedRange());
+
     frame.swapBuffer();
-    logGrid({ grid: new Uint32Array(arrayBuffer), width, height });
+    logGrid({ grid: result, width, height });
   };
 </script>
 
