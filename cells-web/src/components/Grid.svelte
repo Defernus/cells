@@ -8,7 +8,6 @@
   export let width: number;
   export let height: number;
 
-  let canvas: HTMLCanvasElement;
   let device: GPUDevice;
   let frame: Frame;
   let computePipeline: GPUComputePipeline;
@@ -20,9 +19,6 @@
       throw new Error("failed to get webGPU adapter");
     }
     device = await adapter.requestDevice();
-
-    canvas.width = width;
-    canvas.height = height;
 
     const initialGrid = new Uint32Array(width * height);
     initialGrid[0] = 255;
@@ -54,6 +50,7 @@
   const update = async () => {
     const commandEncoder = device.createCommandEncoder();
     const passEncoder = commandEncoder.beginComputePass();
+
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, frame.bindGroup);
     passEncoder.dispatch(Math.ceil(width / 8), Math.ceil(height / 8));
@@ -68,6 +65,7 @@
     const result = new Uint32Array(resultBuffer.getMappedRange());
 
     frame.swapBuffer();
+
     logGrid({ grid: result, width, height });
   };
 </script>
@@ -79,6 +77,5 @@
 </style>
 
 <div class="wrapper">
-  <canvas bind:this={canvas} class="view" width={width} height={height} />
   <button on:click={update}>update</button>
 </div>
