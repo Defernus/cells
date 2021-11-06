@@ -1,4 +1,13 @@
-import { CELL_GEN_MOVE, CELL_INTENTION_MOVE, CELL_VARIANT_LIFE } from "constants/cell";
+import {
+  CELL_GENES_SIZE,
+  CELL_GENES_TO_PROCESS,
+  CELL_GEN_MOVE,
+  CELL_GEN_ROTATE_RIGHT_1,
+  CELL_GEN_ROTATE_RIGHT_7,
+  CELL_GEN_WAIT,
+  CELL_INTENTION_MOVE,
+  CELL_VARIANT_LIFE,
+} from "constants/cell";
 import includeCellUtils from "shaders/cell.util";
 
 interface Props {
@@ -43,12 +52,27 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   }
 
   // life processing
-  let cursor = getCellCursor(&cell);
-  let gen = getCellGen(&cell, cursor);
+  let initialCursor = getCellCursor(&cell);
+  var cursor = initialCursor;
 
-  if (gen == ${CELL_GEN_MOVE}u) {
-    setCellIntention(&cell, ${CELL_INTENTION_MOVE}u);  
+  for (; cursor != initialCursor + ${CELL_GENES_TO_PROCESS}u; cursor = cursor + 1u) {
+    let gen = getCellGen(&cell, cursor % ${CELL_GENES_SIZE}u);
+
+    if (gen == ${CELL_GEN_WAIT}u) {
+      continue;
+    }
+    if (gen >= ${CELL_GEN_ROTATE_RIGHT_1}u && gen <= ${CELL_GEN_ROTATE_RIGHT_7}u) {
+      rotateCell(&cell, gen - ${CELL_GEN_ROTATE_RIGHT_1}u + 1u);
+      continue;
+    }
+    if (gen == ${CELL_GEN_MOVE}u) {
+      setCellIntention(&cell, ${CELL_INTENTION_MOVE}u);  
+      cursor = cursor + 1u;
+      break;
+    }
   }
+
+  setCellCursor(&cell, cursor % ${CELL_GENES_SIZE}u);
 
   grid.cells[index] = cell;
 }

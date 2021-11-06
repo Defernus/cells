@@ -17,3 +17,6 @@ export const CELL_GEN_MOVE = 8;
 
 export const CELL_INTENTION_WAIT = 0;
 export const CELL_INTENTION_MOVE = 1;
+
+export const CELL_GENES_SIZE = 256;
+export const CELL_GENES_TO_PROCESS = 256;

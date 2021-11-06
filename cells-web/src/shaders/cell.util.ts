@@ -82,6 +82,14 @@ fn setCellIntention(cell: ptr<function, Cell>, intention: u32) {
     ((*cell).intention_predator_plant_variant & 0x00ffffffu) | (intention << 24u);
 }
 
+fn rotateCell(cell: ptr<function, Cell>, rotation: u32) {
+  (*cell).direction = ((*cell).direction & 0xffffff00u) | ((getCellDirection(cell) + rotation) % 8u);
+}
+
+fn setCellCursor(cell: ptr<function, Cell>, cursor: u32) {
+  (*cell).stamina_cursor = ((*cell).stamina_cursor & 0xffff0000u) | (cursor & 0x0000ffffu);
+}
+
 `;
 
 export default includeCellUtils;

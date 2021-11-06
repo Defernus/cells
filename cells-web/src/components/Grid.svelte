@@ -6,7 +6,7 @@
   import createGridVertexShader from "shaders/grid.vertex";
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
-  import { CELL_GEN_MOVE, CELL_SIZE, CELL_VARIANT_LIFE } from "constants/cell";
+  import { CELL_GEN_MOVE, CELL_GEN_ROTATE_RIGHT_1, CELL_SIZE, CELL_VARIANT_LIFE } from "constants/cell";
   import setCell from "utils/calls/setCell";
   import { createCell } from "utils/calls/Cell";
 
@@ -87,8 +87,11 @@
 
     const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    const cell = createCell({ variant: CELL_VARIANT_LIFE, genes: [CELL_GEN_MOVE] });
-    setCell(initialGrid, cell, { x: 1, y: 1 }, { x: width, y: height });
+    const moovingCell = createCell({ variant: CELL_VARIANT_LIFE, genes: [CELL_GEN_MOVE, CELL_GEN_ROTATE_RIGHT_1] });
+    const staticCell = createCell({ variant: CELL_VARIANT_LIFE });
+
+    setCell(initialGrid, moovingCell, { x: 1, y: 1 }, { x: width, y: height });
+    setCell(initialGrid, staticCell, { x: 4, y: 1 }, { x: width, y: height });
 
     actionsPipeline = device.createComputePipeline({
       compute: {
