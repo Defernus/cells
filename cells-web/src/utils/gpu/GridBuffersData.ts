@@ -7,7 +7,7 @@ interface ScreenBufferProps {
   initialGrid?: Uint32Array;
 }
 
-class Frame {
+class GridBuffersData {
   private width: number;
   private height: number;
   private device: GPUDevice;
@@ -107,4 +107,4 @@ class Frame {
   }
 }
 
-export default Frame;
+export default GridBuffersData;

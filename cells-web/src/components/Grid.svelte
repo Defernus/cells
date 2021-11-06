@@ -5,7 +5,7 @@
   import createGridVertexShader from "shaders/grid.vertex";
   import createGridFragmentShader from "shaders/grid.fragment";
   import spawnCells from "utils/gpu/spawnCells";
-  import Frame from "utils/gpu/Frame";
+  import GridBuffersData from "utils/gpu/GridBuffersData";
 
   export let width: number;
   export let height: number;
@@ -13,7 +13,7 @@
   let canvas: HTMLCanvasElement;
   let ctx: GPUCanvasContext;
   let device: GPUDevice;
-  let frame: Frame;
+  let gridGpuData: GridBuffersData;
   let computePipeline: GPUComputePipeline;
   let renderPipeline: GPURenderPipeline;
 
@@ -22,7 +22,7 @@
     const passEncoder = commandEncoder.beginComputePass();
 
     passEncoder.setPipeline(computePipeline);
-    passEncoder.setBindGroup(0, frame.computeBindGroup);
+    passEncoder.setBindGroup(0, gridGpuData.computeBindGroup);
     passEncoder.dispatch(Math.ceil(width / 8), Math.ceil(height / 8));
     passEncoder.endPass();
 
@@ -45,7 +45,7 @@
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(renderPipeline);
-    passEncoder.setBindGroup(0, frame.renderBindGroup);
+    passEncoder.setBindGroup(0, gridGpuData.renderBindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.endPass();
 
@@ -55,7 +55,7 @@
   const processFrame = async () => {
     await update();
     await render();
-    frame.swapBuffer();
+    gridGpuData.swapBuffer();
     requestAnimationFrame(processFrame);
   }
 
@@ -119,7 +119,7 @@
       },
     });
 
-    frame = new Frame({
+    gridGpuData = new GridBuffersData({
       width,
       height,
       device,
@@ -133,11 +133,15 @@
 </script>
 
 <style>
-  .wrapper {
-    position: relative;
+  .grid {
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
+    transform: scale(2);
+    transform-origin: top left;
   }
 </style>
 
-<div class="wrapper">
-  <canvas bind:this={canvas} width={width} height={height} />
-</div>
+<canvas class="grid" bind:this={canvas} width={width} height={height} />

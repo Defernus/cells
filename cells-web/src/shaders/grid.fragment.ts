@@ -23,7 +23,7 @@ fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
     u32(fragUV.y * f32(${height})),
   );
   let index = getIndex(fragCord, u32(${width}));
-  if (index == 255u) {
+  if (grid.numbers[index] == 255u) {
     return vec4<f32>(1.0);
   }
   let brightness = f32(grid.numbers[index]) / 255.0;
