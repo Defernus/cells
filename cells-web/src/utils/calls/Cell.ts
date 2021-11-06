@@ -14,14 +14,13 @@ class Cell {
 
 interface CreateCellProps {
   variant: number;
+  genes?: number[];
 }
 
-export const createCell = ({ variant }: CreateCellProps): Cell => {
+export const createCell = ({ variant, genes }: CreateCellProps): Cell => {
   const data = new Uint8Array(CELL_SIZE);
-  // data[267] = variant;
-  for (let i = 0; i !== 272; ++i) {
-    data[i] = variant;
-  }
+  genes?.forEach((g, i) => { data[i] = g });
+  data[264] = variant;
   return new Cell({ data });
 };
 

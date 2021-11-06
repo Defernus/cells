@@ -3,13 +3,13 @@
 | bytes offset | type             | description |
 | ------------ | ---------------- | ----------- |
 | 0            | array\<u8\>[256] | genes       | 
-| 256          | u16              | stamina     |
-| 258          | u16              | cursor      |
+| 256          | u16              | cursor      |
+| 258          | u16              | stamina     |
 | 260          | u32              | age         |
-| 264          | u8               | intention   |
-| 265          | u8               | predator    |
-| 266          | u8               | plant       |
-| 267          | u8               | variant     |
+| 264          | u8               | variant     |
+| 265          | u8               | plant       |
+| 266          | u8               | predator    |
+| 267          | u8               | intention   |
 | 268-270      | -                | *reserved*  |
 | 271          | u8               | direction   |
 
@@ -62,4 +62,9 @@ Increases each time a cell gains stamina through photosynthesis.
 
 ## Direction
 ### Unsigned 8-bit integer
-Cell direction.
+Directions:
+||||
+|---|---|---|
+| 6 | 5 | 4 |
+| 7 | - | 3 |
+| 0 | 1 | 2 |

@@ -1,11 +1,12 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import createGridComputeShader from "shaders/grid.compute";
+  import createGridActionsShader from "shaders/grid.actions";
+  import createGridUpdateShader from "shaders/grid.update";
   import createGridVertexShader from "shaders/grid.vertex";
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
-  import { CELL_SIZE, CELL_VARIANT_LIFE } from "constants/cell";
+  import { CELL_GEN_MOVE, CELL_SIZE, CELL_VARIANT_LIFE } from "constants/cell";
   import setCell from "utils/calls/setCell";
   import { createCell } from "utils/calls/Cell";
 
@@ -16,16 +17,22 @@
   let ctx: GPUCanvasContext;
   let device: GPUDevice;
   let gridGpuData: GridBuffersData;
-  let computePipeline: GPUComputePipeline;
+  let actionsPipeline: GPUComputePipeline;
+  let updatePipeline: GPUComputePipeline;
   let renderPipeline: GPURenderPipeline;
 
   const update = async () => {
     const commandEncoder = device.createCommandEncoder();
     const passEncoder = commandEncoder.beginComputePass();
 
-    passEncoder.setPipeline(computePipeline);
-    passEncoder.setBindGroup(0, gridGpuData.computeBindGroup);
+    passEncoder.setPipeline(actionsPipeline);
+    passEncoder.setBindGroup(0, gridGpuData.actionBindGroup);
     passEncoder.dispatch(Math.ceil(width / 8), Math.ceil(height / 8));
+
+    passEncoder.setPipeline(updatePipeline);
+    passEncoder.setBindGroup(0, gridGpuData.updateBindGroup);
+    passEncoder.dispatch(Math.ceil(width / 8), Math.ceil(height / 8));
+
     passEncoder.endPass();
 
     const gpuCommands = commandEncoder.finish();
@@ -54,11 +61,11 @@
     device.queue.submit([commandEncoder.finish()]);
   };
 
-  const processFrame = async () => {
-    await update();
-    await render();
-    gridGpuData.swapBuffer();
-    requestAnimationFrame(processFrame);
+  const processFrame = () => {
+    requestAnimationFrame(async () => {
+      await update();
+      await render();
+    });
   }
 
   onMount(async () => {
@@ -80,12 +87,18 @@
 
     const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    const cell = createCell({ variant: CELL_VARIANT_LIFE });
-    setCell(initialGrid, cell, { x: 0, y: 0 }, { x: width, y: height });
+    const cell = createCell({ variant: CELL_VARIANT_LIFE, genes: [CELL_GEN_MOVE] });
+    setCell(initialGrid, cell, { x: 1, y: 1 }, { x: width, y: height });
 
-    computePipeline = device.createComputePipeline({
+    actionsPipeline = device.createComputePipeline({
       compute: {
-        module: createGridComputeShader({ device, width, height }),
+        module: createGridActionsShader({ device, width, height }),
+        entryPoint: "main",
+      }
+    });
+    updatePipeline = device.createComputePipeline({
+      compute: {
+        module: createGridUpdateShader({ device, width, height }),
         entryPoint: "main",
       }
     });
@@ -118,12 +131,11 @@
       height,
       device,
       initialGrid,
-      computePipeline,
+      actionsPipeline,
+      updatePipeline,
       renderPipeline,
       cellSize: CELL_SIZE,
     });
-
-    processFrame();
   });
 </script>
 
@@ -135,4 +147,7 @@
   }
 </style>
 
-<canvas class="grid" bind:this={canvas} width={width} height={height} />
+<div>
+  <button on:click={processFrame}>update</button>
+  <canvas class="grid" bind:this={canvas} width={width} height={height} />
+</div>

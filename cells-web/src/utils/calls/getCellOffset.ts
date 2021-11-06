@@ -8,7 +8,7 @@ export interface Cord {
 }
 
 const getCellOffset = (cord: Cord, gridSize: Cord): number =>  (
-  (mod(cord.x, gridSize.x) + mod(gridSize.y, gridSize.y) * gridSize.x) * CELL_SIZE
+  (mod(cord.x, gridSize.x) + mod(cord.y, gridSize.y) * gridSize.x) * CELL_SIZE
 );
 
 export default getCellOffset;

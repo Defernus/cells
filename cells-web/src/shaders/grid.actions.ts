@@ -1,4 +1,4 @@
-import { CELL_VARIANT_LIFE } from "constants/cell";
+import { CELL_GEN_MOVE, CELL_INTENTION_MOVE, CELL_VARIANT_LIFE } from "constants/cell";
 import includeCellUtils from "shaders/cell.util";
 
 interface Props {
@@ -7,7 +7,7 @@ interface Props {
   height: number;
 }
 
-const createGridComputeShader = (props: Props): GPUShaderModule => {
+const createGridActionsShader = (props: Props): GPUShaderModule => {
   const { device, width, height } = props;
 
   const code = /* wgsl */`
@@ -18,8 +18,7 @@ ${includeCellUtils()}
   cells: array<Cell>;
 };
 
-[[group(0), binding(0)]] var<storage, read> inpGrid: Grid;
-[[group(0), binding(1)]] var<storage, write> outGrid: Grid;
+[[group(0), binding(0)]] var<storage, write> grid: Grid;
 
 [[stage(compute), workgroup_size(8, 8)]]
 fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
@@ -34,20 +33,24 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   }
 
   let index = getIndex(cord, gridSize);
-  let cell = inpGrid.cells[index];
+  var cell = grid.cells[index];
 
-  let cellVariant = getCellVariant(cell);
+  let cellVariant = getCellVariant(&cell);
 
   if (cellVariant != ${CELL_VARIANT_LIFE}u) {
-    outGrid.cells[index] = cell;
+    grid.cells[index] = cell;
     return;
   }
 
   // life processing
-  let cursor = getCellCursor(cell);
-  let gen = getCellGen(cell, cursor);
+  let cursor = getCellCursor(&cell);
+  let gen = getCellGen(&cell, cursor);
 
-  outGrid.cells[index] = cell;
+  if (gen == ${CELL_GEN_MOVE}u) {
+    setCellIntention(&cell, ${CELL_INTENTION_MOVE}u);  
+  }
+
+  grid.cells[index] = cell;
 }
 
   `;
@@ -55,4 +58,4 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   return device.createShaderModule({ code });
 };
 
-export default createGridComputeShader;
+export default createGridActionsShader;

@@ -15,25 +15,29 @@ fn mod(a: i32, b: i32) -> i32 {
 }
 
 fn getIndex(cord: vec2<i32>, gridSize: vec2<i32>) -> u32 {
-  return u32(mod(cord.x, gridSize.x) + mod(gridSize.y, gridSize.y) * gridSize.x);
+  return u32(mod(cord.x, gridSize.x) + mod(cord.y, gridSize.y) * gridSize.x);
 }
 
-fn getCellVariant(cell: Cell) -> u32 {
-  return cell.intention_predator_plant_variant & 0x000000ffu;
+fn getCellVariant(cell: ptr<function, Cell>) -> u32 {
+  return (*cell).intention_predator_plant_variant & 0x000000ffu;
 }
 
-fn getCellCursor(cell: Cell) -> u32 {
-  return cell.stamina_cursor & 0x0000ffffu;
+fn getCellIntention(cell: ptr<function, Cell>) -> u32 {
+  return ((*cell).intention_predator_plant_variant >> 24u) & 0x000000ffu;
 }
 
-fn getCellGen(cell: Cell, cursor: u32) -> u32 {
-  var genes = cell.genes;
+fn getCellCursor(cell: ptr<function, Cell>) -> u32 {
+  return (*cell).stamina_cursor & 0x0000ffffu;
+}
+
+fn getCellGen(cell: ptr<function, Cell>, cursor: u32) -> u32 {
+  var genes = (*cell).genes;
   let clusterIndex: u32 = cursor / 4u;
   let genCluster = genes[clusterIndex];
-  return (genCluster >> ((3u - cursor % 4u) * 8u)) & 0x000000ffu;
+  return (genCluster >> ((cursor % 4u) * 8u)) & 0x000000ffu;
 }
 
-fn getCellColor(cell: Cell) -> vec4<f32> {
+fn getCellColor(cell: ptr<function, Cell>) -> vec4<f32> {
   let variant = getCellVariant(cell);
   if (variant == ${CELL_VARIANT_EMPTY}u) {
     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
@@ -48,6 +52,34 @@ fn getCellColor(cell: Cell) -> vec4<f32> {
     return vec4<f32>(0.0, 1.0, 0.0, 1.0);
   }
   return vec4<f32>(1.0, 0.0, 1.0, 1.0);
+}
+
+fn getCellDirection(cell: ptr<function, Cell>) -> u32 {
+  return (*cell).direction & 0x000000ffu;
+}
+
+fn getXByDir(dir: u32) -> i32 {
+  var dirs = array<i32, 8>(
+    -1, 0, 1, 1, 1, 0, -1, -1,
+  );
+  return dirs[dir];
+}
+
+fn getYByDir(dir: u32) -> i32 {
+  var dirs = array<i32, 8>(
+    -1, -1, -1, 0, 1, 1, 1, 0,
+  );
+  return dirs[dir];
+}
+
+fn getCellLookAt(cell: ptr<function, Cell>) -> vec2<i32> {
+  let dir = getCellDirection(cell);
+  return vec2<i32>(getXByDir(dir), getYByDir(dir));
+}
+
+fn setCellIntention(cell: ptr<function, Cell>, intention: u32) {
+  (*cell).intention_predator_plant_variant =
+    ((*cell).intention_predator_plant_variant & 0x00ffffffu) | (intention << 24u);
 }
 
 `;

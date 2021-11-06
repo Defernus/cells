@@ -5,14 +5,15 @@ export const CELL_VARIANT_WALL = 1;
 export const CELL_VARIANT_FOOD = 2;
 export const CELL_VARIANT_LIFE = 3;
 
-let genIndex = 0;
+export const CELL_GEN_WAIT = 0;
+export const CELL_GEN_ROTATE_RIGHT_1 = 1;
+export const CELL_GEN_ROTATE_RIGHT_2 = 2;
+export const CELL_GEN_ROTATE_RIGHT_3 = 3;
+export const CELL_GEN_ROTATE_RIGHT_4 = 4;
+export const CELL_GEN_ROTATE_RIGHT_5 = 5;
+export const CELL_GEN_ROTATE_RIGHT_6 = 6;
+export const CELL_GEN_ROTATE_RIGHT_7 = 7;
+export const CELL_GEN_MOVE = 8;
 
-export const CELL_GEN_WAIT = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_1 = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_2 = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_3 = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_4 = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_5 = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_6 = genIndex++;
-export const CELL_GEN_ROTATE_RIGHT_7 = genIndex++;
-export const CELL_GEN_MOVE = genIndex++;
+export const CELL_INTENTION_WAIT = 0;
+export const CELL_INTENTION_MOVE = 1;
