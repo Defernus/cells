@@ -92,7 +92,7 @@
     renderPipeline = device.createRenderPipeline({
       vertex: {
         module: device.createShaderModule({
-          code: createGridVertexShader({ width, height }),
+          code: createGridVertexShader(),
         }),
         entryPoint: "main",
       },

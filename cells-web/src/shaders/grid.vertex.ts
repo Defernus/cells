@@ -1,9 +1,4 @@
-interface Props {
-  width: number;
-  height: number;
-}
-
-const createGridVertexShader = ({ width, height }: Props): string => 
+const createGridVertexShader = (): string => 
 /* wgsl */`
 
 struct VertexOutput {
