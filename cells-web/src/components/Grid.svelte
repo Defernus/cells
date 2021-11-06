@@ -3,8 +3,9 @@
   import { onMount } from "svelte";
   import createGridComputeShader from "shaders/grid.compute";
   import createGridVertexShader from "shaders/grid.vertex";
-  import Frame from "utils/gpu/Frame";
   import createGridFragmentShader from "shaders/grid.fragment";
+  import spawnCells from "utils/gpu/spawnCells";
+  import Frame from "utils/gpu/Frame";
 
   export let width: number;
   export let height: number;
@@ -76,11 +77,17 @@
     });
 
     const initialGrid = new Uint32Array(width * height);
-    initialGrid[0] = 255;
-    initialGrid[width + 1] = 255;
-    initialGrid[width + 2] = 255;
-    initialGrid[width * 2 + 0] = 255;
-    initialGrid[width * 2 + 1] = 255;
+
+    spawnCells({
+      cell: 255,
+      x: 256,
+      y: 256,
+      width,
+      height,
+      r: 32,
+      density: 0.5,
+      grid: initialGrid,
+    });
 
     computePipeline = device.createComputePipeline({
       compute: {
