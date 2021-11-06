@@ -4,12 +4,14 @@ interface ScreenBufferProps {
   device: GPUDevice;
   computePipeline: GPUComputePipeline;
   renderPipeline: GPURenderPipeline;
-  initialGrid?: Uint32Array;
+  initialGrid?: Uint8Array;
+  cellSize: number;
 }
 
 class GridBuffersData {
   private width: number;
   private height: number;
+  private cellSize: number;
   private device: GPUDevice;
   private computeBindGroups: [GPUBindGroup, GPUBindGroup] = [null, null];
   private renderBindGroups: [GPUBindGroup, GPUBindGroup] = [null, null];
@@ -22,6 +24,7 @@ class GridBuffersData {
     const {
       width,
       height,
+      cellSize,
       device,
       initialGrid,
       computePipeline,
@@ -30,9 +33,11 @@ class GridBuffersData {
 
     this.width = width;
     this.height = height;
+    this.cellSize = cellSize;
     this.device = device;
     this.computePipeline = computePipeline;
     this.renderPipeline = renderPipeline;
+
     const computeBindBufferLayout = this.computePipeline.getBindGroupLayout(0);
     const renderBindBufferLayout = this.renderPipeline.getBindGroupLayout(0);
 
@@ -46,16 +51,16 @@ class GridBuffersData {
     this.renderBindGroups[1] = this.createBindGroup([this.buffers[0]], renderBindBufferLayout);
   }
 
-  private createBuffer(initialGrid?: Uint32Array): GPUBuffer {
+  private createBuffer(initialGrid?: Uint8Array): GPUBuffer {
     const gpuBuffer = this.device.createBuffer({
       mappedAtCreation: Boolean(initialGrid),
-      size: this.width * this.height * Uint32Array.BYTES_PER_ELEMENT,
+      size: this.width * this.height * this.cellSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
 
     if (initialGrid) {
       const arrayBuffer = gpuBuffer.getMappedRange();
-      new Uint32Array(arrayBuffer).set(initialGrid);
+      new Uint8Array(arrayBuffer).set(initialGrid);
       gpuBuffer.unmap();
     }
     return gpuBuffer;
@@ -103,7 +108,7 @@ class GridBuffersData {
   }
 
   get bufferSize(): number {
-    return this.width * this.height * Uint32Array.BYTES_PER_ELEMENT;
+    return this.width * this.height * this.cellSize;
   }
 }
 

@@ -1,3 +1,5 @@
+import includeCellUtils from "shaders/cell.util";
+
 interface Props {
   width: number;
   height: number;
@@ -6,28 +8,22 @@ interface Props {
 const createGridFragmentShader = ({ width, height }: Props): string => 
 /* wgsl */`
 
+${includeCellUtils()}
+
 [[block]] struct Grid {
-  numbers: array<u32>;
+  cells: array<Cell>;
 };
 
 [[group(0), binding(0)]] var<storage, read> grid: Grid;
 
-fn getIndex(cell: vec2<u32>, width: u32) -> u32 {
-  return cell.x + cell.y * width;
-}
-
 [[stage(fragment)]]
 fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
-  let fragCord = vec2<u32>(
-    u32(fragUV.x * f32(${width})),
-    u32(fragUV.y * f32(${height})),
+  let cord = vec2<i32>(
+    i32(fragUV.x * f32(${width})),
+    i32(fragUV.y * f32(${height})),
   );
-  let index = getIndex(fragCord, u32(${width}));
-  if (grid.numbers[index] == 255u) {
-    return vec4<f32>(1.0);
-  }
-  let brightness = f32(grid.numbers[index]) / 255.0;
-  return vec4<f32>(0.0, brightness, brightness, 1.0);
+  let cell = grid.cells[getIndex(cord, vec2<i32>(${width}, ${height}))];
+  return getCellColor(cell);
 }
   
 `;

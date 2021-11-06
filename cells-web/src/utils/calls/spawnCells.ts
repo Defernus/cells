@@ -1,5 +1,5 @@
 interface Props {
-  grid: Uint32Array,
+  grid: Uint8Array,
   width: number,
   height: number,
   x: number,

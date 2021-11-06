@@ -4,8 +4,10 @@
   import createGridComputeShader from "shaders/grid.compute";
   import createGridVertexShader from "shaders/grid.vertex";
   import createGridFragmentShader from "shaders/grid.fragment";
-  import spawnCells from "utils/gpu/spawnCells";
   import GridBuffersData from "utils/gpu/GridBuffersData";
+  import { CELL_SIZE, CELL_VARIANT_LIFE } from "constants/cell";
+  import setCell from "utils/calls/setCell";
+  import { createCell } from "utils/calls/Cell";
 
   export let width: number;
   export let height: number;
@@ -76,18 +78,10 @@
         size: [width, height],
     });
 
-    const initialGrid = new Uint32Array(width * height);
+    const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    spawnCells({
-      cell: 255,
-      x: 256,
-      y: 256,
-      width,
-      height,
-      r: 32,
-      density: 0.5,
-      grid: initialGrid,
-    });
+    const cell = createCell({ variant: CELL_VARIANT_LIFE });
+    setCell(initialGrid, cell, { x: 0, y: 0 }, { x: width, y: height });
 
     computePipeline = device.createComputePipeline({
       compute: {
@@ -126,6 +120,7 @@
       initialGrid,
       computePipeline,
       renderPipeline,
+      cellSize: CELL_SIZE,
     });
 
     processFrame();
@@ -134,12 +129,8 @@
 
 <style>
   .grid {
-    image-rendering: optimizeSpeed;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: optimize-contrast;
-    -ms-interpolation-mode: nearest-neighbor;
-    transform: scale(2);
+    image-rendering: pixelated;
+    transform: scale(32);
     transform-origin: top left;
   }
 </style>
