@@ -3,19 +3,12 @@ const MAX_LIFE = 255;
 
 interface Props {
   device: GPUDevice;
-  bindingGroup?: number;
-  inpGridBufferBinding?: number;
-  outGridBufferBinding?: number;
   width: number;
   height: number;
 }
 
-const createGridShader = (props: Props): GPUShaderModule => {
-  const {
-    device,
-    bindingGroup = 0,
-    width, height,
-  } = props;
+const createGridComputeShader = (props: Props): GPUShaderModule => {
+  const { device, width, height } = props;
 
   const code = /* wgsl */`
 
@@ -23,8 +16,8 @@ const createGridShader = (props: Props): GPUShaderModule => {
   numbers: array<u32>;
 };
 
-[[group(${bindingGroup}), binding(0)]] var<storage, read> inpGrid: Grid;
-[[group(${bindingGroup}), binding(1)]] var<storage, write> outGrid: Grid;
+[[group(0), binding(0)]] var<storage, read> inpGrid: Grid;
+[[group(0), binding(1)]] var<storage, write> outGrid: Grid;
 
 fn mod(a: i32, b: i32) -> i32 {
   return ((a % b) + b) % b;
@@ -39,7 +32,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   let size = vec2<i32>(${width}, ${height});
   let cell = vec2<i32>(
     i32(global_id.x),
-    i32(global_id.y)
+    i32(global_id.y),
   );
 
   if (cell.x > size.x || cell.y > size.y) {
@@ -87,4 +80,4 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   return device.createShaderModule({ code });
 };
 
-export default createGridShader;
+export default createGridComputeShader;

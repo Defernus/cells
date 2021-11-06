@@ -3,6 +3,7 @@ interface ScreenBufferProps {
   height: number;
   device: GPUDevice;
   computePipeline: GPUComputePipeline;
+  renderPipeline: GPURenderPipeline;
   initialGrid?: Uint32Array;
 }
 
@@ -10,10 +11,11 @@ class Frame {
   private width: number;
   private height: number;
   private device: GPUDevice;
-  private bindGroups: [GPUBindGroup, GPUBindGroup] = [null, null];
+  private computeBindGroups: [GPUBindGroup, GPUBindGroup] = [null, null];
+  private renderBindGroups: [GPUBindGroup, GPUBindGroup] = [null, null];
   private buffers: [GPUBuffer, GPUBuffer] = [null, null];
-  private bindBufferLayout: GPUBindGroupLayout;
   private computePipeline: GPUComputePipeline;
+  private renderPipeline: GPURenderPipeline;
   private currentBindGroup = 0;
 
   constructor (props: ScreenBufferProps) {
@@ -23,19 +25,25 @@ class Frame {
       device,
       initialGrid,
       computePipeline,
+      renderPipeline,
     } = props;
 
     this.width = width;
     this.height = height;
     this.device = device;
     this.computePipeline = computePipeline;
-    this.bindBufferLayout = this.computePipeline.getBindGroupLayout(0);
+    this.renderPipeline = renderPipeline;
+    const computeBindBufferLayout = this.computePipeline.getBindGroupLayout(0);
+    const renderBindBufferLayout = this.renderPipeline.getBindGroupLayout(0);
 
     this.buffers[0] = this.createBuffer(initialGrid);
     this.buffers[1] = this.createBuffer();
 
-    this.bindGroups[0] = this.createBindGroup([this.buffers[0], this.buffers[1]]);
-    this.bindGroups[1] = this.createBindGroup([this.buffers[1], this.buffers[0]]);
+    this.computeBindGroups[0] = this.createBindGroup([this.buffers[0], this.buffers[1]], computeBindBufferLayout);
+    this.computeBindGroups[1] = this.createBindGroup([this.buffers[1], this.buffers[0]], computeBindBufferLayout);
+
+    this.renderBindGroups[0] = this.createBindGroup([this.buffers[1]], renderBindBufferLayout);
+    this.renderBindGroups[1] = this.createBindGroup([this.buffers[0]], renderBindBufferLayout);
   }
 
   private createBuffer(initialGrid?: Uint32Array): GPUBuffer {
@@ -53,13 +61,13 @@ class Frame {
     return gpuBuffer;
   }
 
-  private createBindGroup(buffers: [GPUBuffer, GPUBuffer]): GPUBindGroup {
+  private createBindGroup(buffers: GPUBuffer[], layout: GPUBindGroupLayout): GPUBindGroup {
     return this.device.createBindGroup({
-      layout: this.bindBufferLayout,
-      entries: [
-        { binding: 0, resource: { buffer: buffers[0] } },
-        { binding: 1, resource: { buffer: buffers[1] } },
-      ],
+      layout,
+      entries: buffers.map((buffer, i) => ({
+        binding: i,
+        resource: { buffer },
+      })),
     });
   }
 
@@ -82,8 +90,12 @@ class Frame {
     this.currentBindGroup = (this.currentBindGroup + 1) % 2;
   }
 
-  get bindGroup(): GPUBindGroup {
-    return this.bindGroups[this.currentBindGroup];
+  get computeBindGroup(): GPUBindGroup {
+    return this.computeBindGroups[this.currentBindGroup];
+  }
+
+  get renderBindGroup(): GPUBindGroup {
+    return this.renderBindGroups[this.currentBindGroup];
   }
 
   get buffer(): GPUBuffer {
