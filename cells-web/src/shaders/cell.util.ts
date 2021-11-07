@@ -55,7 +55,15 @@ fn getCellColor(cell: ptr<function, Cell>) -> vec4<f32> {
 }
 
 fn getCellDirection(cell: ptr<function, Cell>) -> u32 {
-  return (*cell).direction & 0x000000ffu;
+  return (*cell).direction & 0x7u;
+}
+
+fn setCellDirection(cell: ptr<function, Cell>, direction: u32) {
+  (*cell).direction = ((*cell).direction & 0xfffffff0u) | (direction & 0x7u);
+}
+
+fn rotateCell(cell: ptr<function, Cell>, rotation: i32) {
+  setCellDirection(cell, u32(mod(i32(getCellDirection(cell)) + rotation, 8)));
 }
 
 fn getXByDir(dir: u32) -> i32 {
@@ -80,10 +88,6 @@ fn getCellLookAt(cell: ptr<function, Cell>) -> vec2<i32> {
 fn setCellIntention(cell: ptr<function, Cell>, intention: u32) {
   (*cell).intention_predator_plant_variant =
     ((*cell).intention_predator_plant_variant & 0x00ffffffu) | (intention << 24u);
-}
-
-fn rotateCell(cell: ptr<function, Cell>, rotation: u32) {
-  (*cell).direction = ((*cell).direction & 0xffffff00u) | ((getCellDirection(cell) + rotation) % 8u);
 }
 
 fn setCellCursor(cell: ptr<function, Cell>, cursor: u32) {

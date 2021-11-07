@@ -43,7 +43,7 @@ fn main([[location(0)]] fragUV: vec2<f32>) -> [[interpolate(flat), location(0)]]
         }
 
         // skip neighbor cell if it not look at this cell
-        let lookAt = getCellLookAt(&cell) + nCord;
+        let lookAt = getCellLookAt(&nCell) + nCord;
         if (lookAt.x != cord.x || lookAt.y != cord.y) {
           continue;
         }

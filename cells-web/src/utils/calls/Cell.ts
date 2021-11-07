@@ -15,12 +15,18 @@ class Cell {
 interface CreateCellProps {
   variant: number;
   genes?: number[];
+  direction?: number;
 }
 
-export const createCell = ({ variant, genes }: CreateCellProps): Cell => {
+export const createCell = ({
+  variant,
+  genes,
+  direction = 0,
+}: CreateCellProps): Cell => {
   const data = new Uint8Array(CELL_SIZE);
   genes?.forEach((g, i) => { data[i] = g });
   data[264] = variant;
+  data[271] = direction;
   return new Cell({ data });
 };
 

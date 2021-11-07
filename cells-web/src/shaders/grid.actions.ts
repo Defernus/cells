@@ -62,7 +62,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       continue;
     }
     if (gen >= ${CELL_GEN_ROTATE_RIGHT_1}u && gen <= ${CELL_GEN_ROTATE_RIGHT_7}u) {
-      rotateCell(&cell, gen - ${CELL_GEN_ROTATE_RIGHT_1}u + 1u);
+      rotateCell(&cell, i32(gen) - ${CELL_GEN_ROTATE_RIGHT_1} + 1);
       continue;
     }
     if (gen == ${CELL_GEN_MOVE}u) {

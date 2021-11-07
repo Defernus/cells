@@ -87,8 +87,15 @@
 
     const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    const moovingCell = createCell({ variant: CELL_VARIANT_LIFE, genes: [CELL_GEN_MOVE, CELL_GEN_ROTATE_RIGHT_1] });
-    const staticCell = createCell({ variant: CELL_VARIANT_LIFE });
+    const moovingCell = createCell({
+      variant: CELL_VARIANT_LIFE,
+      genes: [CELL_GEN_MOVE, CELL_GEN_ROTATE_RIGHT_1],
+    });
+    const staticCell = createCell({
+      variant: CELL_VARIANT_LIFE,
+      genes: [CELL_GEN_ROTATE_RIGHT_1],
+      direction: 3,
+    });
 
     setCell(initialGrid, moovingCell, { x: 1, y: 1 }, { x: width, y: height });
     setCell(initialGrid, staticCell, { x: 4, y: 1 }, { x: width, y: height });
@@ -139,6 +146,7 @@
       renderPipeline,
       cellSize: CELL_SIZE,
     });
+    processFrame();
   });
 </script>
 

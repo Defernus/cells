@@ -52,12 +52,13 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       }
 
       // skip neighbor cell if it not look at this cell
-      let lookAt = getCellLookAt(&cell) + nCord;
+      let lookAt = getCellLookAt(&nCell) + nCord;
       if (lookAt.x != cord.x || lookAt.y != cord.y) {
         continue;
       }
 
       if (getCellIntention(&nCell) == ${CELL_INTENTION_MOVE}u) {
+        setCellIntention(&nCell, 0u);
         grid.cells[currentIndex] = nCell;
         grid.cells[nIndex] = Cell();
         return;
