@@ -38,7 +38,7 @@ export const createCell = ({
   return new Cell({ data });
 };
 
-export const logCellData = (data: Uint8Array): void => {
+export const logCellData = (data: number[]): void => {
     console.log("genes:", [...data].slice(0, CELL_GENES_SIZE));
     console.log("cursor:", data[256] | (data[257] << 8));
     console.log("stamina:", data[258] | (data[259] << 8));

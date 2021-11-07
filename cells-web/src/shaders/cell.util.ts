@@ -49,23 +49,6 @@ fn getCellGen(cell: ptr<function, Cell>, cursor: u32) -> u32 {
   return (genCluster >> ((cursor % 4u) * 8u)) & 0x000000ffu;
 }
 
-fn getCellColor(cell: ptr<function, Cell>) -> vec4<f32> {
-  let variant = getCellVariant(cell);
-  if (variant == ${CELL_VARIANT_EMPTY}u) {
-    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  }
-  if (variant == ${CELL_VARIANT_WALL}u) {
-    return vec4<f32>(0.5, 0.5, 0.5, 1.0);
-  }
-  if (variant == ${CELL_VARIANT_FOOD}u) {
-    return vec4<f32>(0.58, 0.49, 0.25, 1.0);
-  }
-  if (variant == ${CELL_VARIANT_LIFE}u) {
-    return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-  }
-  return vec4<f32>(1.0, 0.0, 1.0, 1.0);
-}
-
 fn getCellDirection(cell: ptr<function, Cell>) -> u32 {
   return (*cell).direction & 0x7u;
 }
@@ -104,6 +87,51 @@ fn setCellIntention(cell: ptr<function, Cell>, intention: u32) {
 
 fn setCellCursor(cell: ptr<function, Cell>, cursor: u32) {
   (*cell).stamina_cursor = ((*cell).stamina_cursor & 0xffff0000u) | (cursor & 0x0000ffffu);
+}
+
+fn getCellPredatorPoints(cell: ptr<function, Cell>) -> u32 {
+  return ((*cell).intention_predator_plant_variant >> 16u) & 0xffu;
+}
+
+fn addCellPredatorPoint(cell: ptr<function, Cell>, value: u32) {
+  var points = getCellPredatorPoints(cell) + value;
+  if (points > 0xffu) {
+    points = 0xffu;
+  }
+  (*cell).intention_predator_plant_variant = ((*cell).intention_predator_plant_variant & 0xffff00ffu) | ((points & 0xffu) << 16u);
+}
+
+fn getCellPlantPoints(cell: ptr<function, Cell>) -> u32 {
+  return ((*cell).intention_predator_plant_variant >> 8u) & 0xffu;
+}
+
+fn addCellPlantPoint(cell: ptr<function, Cell>, value: u32) {
+  var points = getCellPlantPoints(cell) + value;
+  if (points > 0xffu) {
+    points = 0xffu;
+  }
+  (*cell).intention_predator_plant_variant = ((*cell).intention_predator_plant_variant & 0xffff00ffu) | ((points & 0xffu) << 8u);
+}
+
+fn getCellColor(cell: ptr<function, Cell>) -> vec4<f32> {
+  let variant = getCellVariant(cell);
+  if (variant == ${CELL_VARIANT_EMPTY}u) {
+    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  }
+  if (variant == ${CELL_VARIANT_WALL}u) {
+    return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+  }
+  if (variant == ${CELL_VARIANT_FOOD}u) {
+    return vec4<f32>(0.58, 0.49, 0.25, 1.0);
+  }
+  if (variant == ${CELL_VARIANT_LIFE}u) {
+    return vec4<f32>(
+      f32(getCellPredatorPoints(cell)) / 512.0 + 0.5,
+      f32(getCellPlantPoints(cell)) / 512.0 + 0.5,
+      0.0, 1.0,
+    );
+  }
+  return vec4<f32>(1.0, 0.0, 1.0, 1.0);
 }
 
 `;

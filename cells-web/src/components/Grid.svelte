@@ -194,7 +194,7 @@
     await resultBuffer.mapAsync(GPUMapMode.READ);
     const cellData = new Uint8Array(resultBuffer.getMappedRange(cellOffset, CELL_SIZE));
     console.log("cell at", x, y);
-    logCellData(cellData);
+    logCellData([...cellData]);
 
     resultBuffer.unmap();
   }

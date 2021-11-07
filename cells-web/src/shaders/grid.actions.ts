@@ -8,7 +8,6 @@ import {
   CELL_GEN_WAIT,
   CELL_INTENTION_DIVISION,
   CELL_INTENTION_MOVE,
-  CELL_STAMINA_DIVISION_FACTOR,
   CELL_STAMINA_DIVISION_MAX,
   CELL_STAMINA_FRAME,
   CELL_STAMINA_MOVEMENT,
@@ -96,6 +95,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       break;
     }
     if (gen == ${CELL_GEN_PHOTOSYNTHESIS}u) {
+      addCellPlantPoint(&cell, ${CELL_STAMINA_PHOTOSYNTHESIS}u);
       cursor = cursor + 1u;
       newStamina = newStamina + ${CELL_STAMINA_PHOTOSYNTHESIS};
       break;
