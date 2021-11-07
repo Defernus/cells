@@ -73,21 +73,6 @@ class GridBuffersData {
     });
   }
 
-  createResultBuffer(commandEncoder: GPUCommandEncoder): GPUBuffer {
-    const resultBuffer = this.device.createBuffer({
-      size: this.bufferSize,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    });
-    commandEncoder.copyBufferToBuffer(
-      this.buffer,
-      0,
-      resultBuffer,
-      0,
-      this.bufferSize,
-    );
-    return resultBuffer;
-  }
-
   get bufferSize(): number {
     return this.width * this.height * this.cellSize;
   }

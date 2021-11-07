@@ -1,4 +1,4 @@
-import { CELL_INTENTION_MOVE, CELL_VARIANT_LIFE } from "constants/cell";
+import { CELL_INTENTION_DIVISION, CELL_INTENTION_MOVE, CELL_STAMINA_CHILD_DIVISION_FACTOR, CELL_STAMINA_DIVISION_FACTOR, CELL_STAMINA_PARENT_DIVISION_FACTOR, CELL_VARIANT_LIFE } from "constants/cell";
 import includeCellUtils from "shaders/cell.util";
 
 interface Props {
@@ -57,10 +57,21 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
         continue;
       }
 
-      if (getCellIntention(&nCell) == ${CELL_INTENTION_MOVE}u) {
+      let nIntention = getCellIntention(&nCell);
+
+      if (nIntention == ${CELL_INTENTION_MOVE}u) {
         setCellIntention(&nCell, 0u);
         grid.cells[currentIndex] = nCell;
         grid.cells[nIndex] = Cell();
+        return;
+      }
+      if (nIntention == ${CELL_INTENTION_DIVISION}u) {
+        setCellIntention(&nCell, 0u);
+        let initialStamina = getCellStamina(&nCell);
+        setCellStamina(&nCell, u32(f32(initialStamina) * ${CELL_STAMINA_PARENT_DIVISION_FACTOR}));
+        grid.cells[nIndex] = nCell;
+        setCellStamina(&nCell, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
+        grid.cells[currentIndex] = nCell;
         return;
       }
     }

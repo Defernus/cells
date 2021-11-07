@@ -6,9 +6,14 @@
   import createGridVertexShader from "shaders/grid.vertex";
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
-  import { CELL_GEN_MOVE, CELL_GEN_ROTATE_RIGHT_1, CELL_SIZE, CELL_VARIANT_LIFE } from "constants/cell";
+  import {
+    CELL_GEN_PHOTOSYNTHESIS,
+    CELL_GEN_ROTATE_RIGHT_1,
+    CELL_SIZE,
+    CELL_VARIANT_LIFE,
+  } from "constants/cell";
   import setCell from "utils/calls/setCell";
-  import { createCell } from "utils/calls/Cell";
+  import { createCell, logCellData } from "utils/calls/Cell";
 
   export let width: number;
   export let height: number;
@@ -20,6 +25,8 @@
   let actionsPipeline: GPUComputePipeline;
   let updatePipeline: GPUComputePipeline;
   let renderPipeline: GPURenderPipeline;
+  let isSimpulationRunning = false;
+  let resultBuffer: GPUBuffer;
 
   const update = async () => {
     const commandEncoder = device.createCommandEncoder();
@@ -34,6 +41,14 @@
     passEncoder.dispatch(Math.ceil(width / 8), Math.ceil(height / 8));
 
     passEncoder.endPass();
+
+    commandEncoder.copyBufferToBuffer(
+      gridGpuData.buffer,
+      0,
+      resultBuffer,
+      0,
+      gridGpuData.bufferSize,
+    );
 
     const gpuCommands = commandEncoder.finish();
     device.queue.submit([gpuCommands]);
@@ -65,8 +80,20 @@
     requestAnimationFrame(async () => {
       await update();
       await render();
+      if (isSimpulationRunning) {
+        processFrame();
+      }
     });
-  }
+  };
+
+  const start = () => {
+    isSimpulationRunning = true;
+    processFrame();
+  };
+
+  const stop = () => {
+    isSimpulationRunning = false;
+  };
 
   onMount(async () => {
     const adapter = await navigator.gpu?.requestAdapter();
@@ -87,18 +114,19 @@
 
     const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    const moovingCell = createCell({
+    const cell = createCell({
       variant: CELL_VARIANT_LIFE,
-      genes: [CELL_GEN_MOVE, CELL_GEN_ROTATE_RIGHT_1],
-    });
-    const staticCell = createCell({
-      variant: CELL_VARIANT_LIFE,
-      genes: [CELL_GEN_ROTATE_RIGHT_1],
+      genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS],
+      stamina: 16,
       direction: 3,
     });
 
-    setCell(initialGrid, moovingCell, { x: 1, y: 1 }, { x: width, y: height });
-    setCell(initialGrid, staticCell, { x: 4, y: 1 }, { x: width, y: height });
+    setCell(
+      initialGrid,
+      cell,
+      { x: Math.floor(width / 2), y: Math.floor(height / 2) },
+      { x: width, y: height },
+    );
 
     actionsPipeline = device.createComputePipeline({
       compute: {
@@ -146,8 +174,30 @@
       renderPipeline,
       cellSize: CELL_SIZE,
     });
+
+    resultBuffer = device.createBuffer({
+      size: gridGpuData.bufferSize,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+
     processFrame();
   });
+
+  const handleGridClick: svelte.JSX.MouseEventHandler<HTMLCanvasElement> = async (e) => {
+    const scale = 32;
+    const { offsetLeft, offsetTop } = e.target as HTMLCanvasElement;
+    const x = Math.floor((e.clientX - offsetLeft) / scale);
+    const y = Math.floor((height * scale - e.clientY + offsetTop) / scale);
+
+    const cellOffset = (x + y * width) * CELL_SIZE;
+    
+    await resultBuffer.mapAsync(GPUMapMode.READ);
+    const cellData = new Uint8Array(resultBuffer.getMappedRange(cellOffset, CELL_SIZE));
+    console.log("cell at", x, y);
+    logCellData(cellData);
+
+    resultBuffer.unmap();
+  }
 </script>
 
 <style>
@@ -159,6 +209,20 @@
 </style>
 
 <div>
-  <button on:click={processFrame}>update</button>
-  <canvas class="grid" bind:this={canvas} width={width} height={height} />
+  <div>
+    {#if isSimpulationRunning}
+      <button on:click={stop}>stop</button>
+    {/if}
+    {#if !isSimpulationRunning}
+      <button on:click={start}>start</button>
+      <button on:click={processFrame}>update</button>
+    {/if}
+  </div>
+  <canvas
+    class="grid"
+    bind:this={canvas}
+    on:click={handleGridClick}
+    width={width}
+    height={height}
+  />
 </div>

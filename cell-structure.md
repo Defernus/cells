@@ -10,13 +10,17 @@
 | 265          | u8               | plant       |
 | 266          | u8               | predator    |
 | 267          | u8               | intention   |
-| 268-270      | -                | *reserved*  |
-| 271          | u8               | direction   |
+| 268          | u8               | direction   |
+| 269-271      | -                | *reserved*  |
 
 
 ## Genes
 ### array of Unsigned 8-bit integer with 256 elements
-// !TODO genes description
+| gen id | name    | description                                                                              |
+| ------ | ------- | ---------------------------------------------------------------------------------------- |
+| 0      | wait    | go to the next gen                                                                       |
+| 1-7    | rotateN | rotate to  `newDir = currentDir + genId`                                                 |
+| 8      | move    | move current cell forward next cell is free, bite life cell, eat food, skip turn if wall |
 
 
 ## Variant
@@ -52,7 +56,7 @@ Increases each time a cell eats another cell.
 
 ## Intention
 ### Unsigned 8-bit integer
-Stores cell's action to process it
+Stores cell's movement action intention to process it
 
 
 ## Plant

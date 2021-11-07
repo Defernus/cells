@@ -1,4 +1,9 @@
-import { CELL_VARIANT_EMPTY, CELL_VARIANT_FOOD, CELL_VARIANT_LIFE, CELL_VARIANT_WALL } from "constants/cell";
+import {
+  CELL_VARIANT_EMPTY,
+  CELL_VARIANT_FOOD,
+  CELL_VARIANT_LIFE,
+  CELL_VARIANT_WALL,
+} from "constants/cell";
 
 const includeCellUtils = (): string => /* wgsl */`
 
@@ -28,6 +33,13 @@ fn getCellIntention(cell: ptr<function, Cell>) -> u32 {
 
 fn getCellCursor(cell: ptr<function, Cell>) -> u32 {
   return (*cell).stamina_cursor & 0x0000ffffu;
+}
+
+fn getCellStamina(cell: ptr<function, Cell>) -> u32 {
+  return ((*cell).stamina_cursor >> 16u) & 0x0000ffffu;
+}
+fn setCellStamina(cell: ptr<function, Cell>, intention: u32) {
+  (*cell).stamina_cursor = ((*cell).stamina_cursor & 0x0000ffffu) | (intention << 16u);
 }
 
 fn getCellGen(cell: ptr<function, Cell>, cursor: u32) -> u32 {
