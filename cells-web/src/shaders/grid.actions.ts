@@ -69,8 +69,9 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
     let lookAtCord = getCellLookAt(&cell) + cord;
     let lookAtIndex = getIndex(lookAtCord, gridSize);
     var lookAtCell = grid.cells[lookAtIndex];
-    if (getCellVariant(&lookAtCell) != ${CELL_VARIANT_EMPTY}u && getCellVariant(&lookAtCell) != ${CELL_VARIANT_FOOD}u) {
-      grid.cells[index] = Cell();
+    if (getCellVariant(&lookAtCell) != ${CELL_VARIANT_EMPTY}u) {
+      setCellVariant(&cell, ${CELL_VARIANT_FOOD}u);
+      grid.cells[index] = cell;
       return;
     }
     setCellIntention(&cell, ${CELL_INTENTION_DIVISION}u);

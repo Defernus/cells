@@ -2,8 +2,12 @@ import {
   CELL_INTENTION_DIVISION,
   CELL_INTENTION_MOVE,
   CELL_STAMINA_CHILD_DIVISION_FACTOR,
+  CELL_STAMINA_EAT,
   CELL_STAMINA_PARENT_DIVISION_FACTOR,
+  CELL_VARIANT_EMPTY,
+  CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
+  CELL_VARIANT_WALL,
 } from "constants/cell";
 import includeCellUtils from "shaders/cell.util";
 
@@ -67,9 +71,34 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
 
       if (nIntention == ${CELL_INTENTION_MOVE}u) {
         setCellIntention(&nCell, 0u);
-        grid.cells[currentIndex] = nCell;
-        grid.cells[nIndex] = Cell();
-        return;
+        let variant = getCellVariant(&cell);
+        if (variant == ${CELL_VARIANT_WALL}u) {
+          grid.cells[nIndex] = nCell;
+          continue;
+        }
+        if (variant == ${CELL_VARIANT_EMPTY}u) {
+          grid.cells[currentIndex] = nCell;
+          grid.cells[nIndex] = Cell();
+          return;
+        }
+        if (variant == ${CELL_VARIANT_FOOD}u) {
+          setCellStamina(&nCell, getCellStamina(&nCell) + ${CELL_STAMINA_EAT}u);
+          grid.cells[currentIndex] = nCell;
+          grid.cells[nIndex] = Cell();
+          return;
+        }
+        if (variant == ${CELL_VARIANT_LIFE}u) {
+          let stamina = i32(getCellStamina(&cell));
+          let hit = i32(getCellStamina(&nCell)) / 2 + 1;
+          let newStamina = stamina - hit;
+          if (newStamina <= 0) {
+            setCellVariant(&cell, ${CELL_VARIANT_FOOD}u);
+            grid.cells[currentIndex] = cell;
+            return;
+          }
+          setCellStamina(&cell, u32(newStamina));
+          grid.cells[currentIndex] = cell;
+        }
       }
       if (nIntention == ${CELL_INTENTION_DIVISION}u) {
         setCellIntention(&nCell, 0u);

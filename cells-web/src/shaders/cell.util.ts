@@ -27,6 +27,11 @@ fn getCellVariant(cell: ptr<function, Cell>) -> u32 {
   return (*cell).intention_predator_plant_variant & 0x000000ffu;
 }
 
+fn setCellVariant(cell: ptr<function, Cell>, variant: u32) {
+  (*cell).intention_predator_plant_variant =
+    ((*cell).intention_predator_plant_variant & 0xffffff00u) | (variant & 0xffu);
+}
+
 fn getCellIntention(cell: ptr<function, Cell>) -> u32 {
   return ((*cell).intention_predator_plant_variant >> 24u) & 0x000000ffu;
 }

@@ -7,6 +7,7 @@
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
+    CELL_GEN_MOVE,
     CELL_GEN_PHOTOSYNTHESIS,
     CELL_GEN_ROTATE_RIGHT_1,
     CELL_SIZE,
@@ -114,17 +115,31 @@
 
     const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    const cell = createCell({
+    const plantCell = createCell({
       variant: CELL_VARIANT_LIFE,
       genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS],
       stamina: 16,
       direction: 3,
     });
+    const predatorCell = createCell({
+      variant: CELL_VARIANT_LIFE,
+      genes: [CELL_GEN_MOVE],
+      stamina: 64,
+      direction: 7,
+    });
 
+    for(let i = 0; i != 4; ++i) {
+      setCell(
+        initialGrid,
+        plantCell,
+        { x: Math.floor(width / 2) - i, y: Math.floor(height / 2) },
+        { x: width, y: height },
+      );
+    }
     setCell(
       initialGrid,
-      cell,
-      { x: Math.floor(width / 2), y: Math.floor(height / 2) },
+      predatorCell,
+      { x: Math.floor(width / 2) + 2, y: Math.floor(height / 2) },
       { x: width, y: height },
     );
 
@@ -193,7 +208,7 @@
     
     await resultBuffer.mapAsync(GPUMapMode.READ);
     const cellData = new Uint8Array(resultBuffer.getMappedRange(cellOffset, CELL_SIZE));
-    console.log("cell at", x, y);
+    console.log("\n\ncell at", x, y);
     logCellData([...cellData]);
 
     resultBuffer.unmap();
@@ -205,6 +220,17 @@
     image-rendering: pixelated;
     transform: scale(32);
     transform-origin: top left;
+
+    /* https://stackoverflow.com/questions/69867152/how-to-disable-filtering-on-canvas-with-webgpu-context */
+    animation: fix-image-rendering-bug .0001s;
+  }
+  @keyframes fix-image-rendering-bug {
+    from {
+      opacity: 0.9999;
+    }
+    to {
+      opacity: 1;
+    }
   }
 </style>
 
