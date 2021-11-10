@@ -4,19 +4,14 @@ import {
   CELL_VARIANT_LIFE,
   CELL_VARIANT_WALL,
 } from "constants/cell";
+import { cellStructure } from "utils/calls/Cell";
+
+const cellProps = Object.entries(cellStructure).map(([name, { wgslType }]) => `${name}: ${wgslType};`);
 
 export const includeCell = (): string => /* wgsl */`
 
 struct Cell {
-  genes: array<u32, 64>;
-  stamina: u32;
-  cursor: u32;
-  age: u32;
-  intention: u32;
-  predator: u32;
-  plant: u32;
-  variant: u32;
-  direction: u32;
+  ${cellProps.join("\n  ")}
 };
 
 `;
