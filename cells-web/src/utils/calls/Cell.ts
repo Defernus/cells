@@ -1,4 +1,4 @@
-import { CELL_GENES_SIZE, CELL_GEN_MOVE, CELL_SIZE } from "constants/cell";
+import { CELL_GENES_SIZE, CELL_SIZE } from "constants/cell";
 
 export enum CellPropName {
   Genes = "genes",
@@ -31,7 +31,7 @@ export const cellStructure: {
   [CellPropName.Genes]: {
     wgslType: `array<u32, ${CELL_GENES_SIZE / 4}>`,
     bytesOffset: getBytesOffset(CELL_GENES_SIZE),
-    getValue: (cell) => [...cell.data].slice(0, CELL_GENES_SIZE),
+    getValue: (cell) => [...Array.from(cell.data)].slice(0, CELL_GENES_SIZE),
   },
   [CellPropName.Stamina]: {
     wgslType: "u32",
