@@ -7,6 +7,7 @@
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
+CELL_GEN_END,
     CELL_GEN_MOVE,
     CELL_GEN_PHOTOSYNTHESIS,
     CELL_GEN_ROTATE_RIGHT_1,
@@ -127,7 +128,7 @@ import Cell from "utils/calls/Cell";
       direction: 7,
     });
 
-    for(let i = 0; i != 7; ++i) {
+    for(let i = 0; i != 6; ++i) {
       plantCell.putToGrid(
         initialGrid,
         Math.floor(width / 2) - i,
@@ -137,7 +138,7 @@ import Cell from "utils/calls/Cell";
     }
     predatorCell.putToGrid(
       initialGrid,
-      Math.floor(width / 2) + 2,
+      Math.floor(width / 2) + 3,
       Math.floor(height / 2),
       width,
     );

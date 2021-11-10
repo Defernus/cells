@@ -1,4 +1,5 @@
 import {
+  CELL_GENES_SIZE,
   CELL_VARIANT_EMPTY,
   CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
@@ -140,6 +141,10 @@ fn addCellPredatorPoint(index: u32, value: u32) {
 fn addCellPlantPoint(index: u32, value: u32) {
   var points = grid.cells[index].plant + value;
   grid.cells[index].plant = points;
+}
+
+fn addCellCursor(index: u32, value: u32) {
+  setCellCursor(index, (getCellCursor(index) + value) % ${CELL_GENES_SIZE}u);
 }
 
 `;
