@@ -1,4 +1,4 @@
-export const CELL_SIZE = 272;
+export const CELL_SIZE = 288;
 
 export const CELL_VARIANT_EMPTY = 0;
 export const CELL_VARIANT_WALL = 1;

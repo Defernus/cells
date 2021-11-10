@@ -9,7 +9,7 @@ import {
   CELL_VARIANT_LIFE,
   CELL_VARIANT_WALL,
 } from "constants/cell";
-import includeCellUtils from "shaders/cell.util";
+import { includeCellGetters, includeCellSetters, includeCell } from "shaders/cell.util";
 
 interface Props {
   device: GPUDevice;
@@ -22,13 +22,16 @@ const createGridUpdateShader = (props: Props): GPUShaderModule => {
 
   const code = /* wgsl */`
 
-${includeCellUtils()}
+${includeCell()}
 
 [[block]] struct Grid {
   cells: array<Cell>;
 };
 
 [[group(0), binding(0)]] var<storage, write> grid: Grid;
+
+${includeCellGetters()}
+${includeCellSetters()}
 
 [[stage(compute), workgroup_size(8, 8)]]
 fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
@@ -43,7 +46,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   }
 
   let currentIndex = getIndex(cord, gridSize);
-  var cell = grid.cells[currentIndex];
+  let cell = &grid.cells[currentIndex];
 
   // process all neighbor cells
   for (var i = -1; i != 2; i = i + 1) {
@@ -54,59 +57,54 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       }
       let nCord = cord + vec2<i32>(i, j);
       let nIndex = getIndex(nCord, gridSize);
-      var nCell = grid.cells[nIndex];
 
       // skip not life cells
-      if (getCellVariant(&nCell) != ${CELL_VARIANT_LIFE}u) {
+      if (getCellVariant(nIndex) != ${CELL_VARIANT_LIFE}u) {
         continue;
       }
 
       // skip neighbor cell if it not look at this cell
-      let lookAt = getCellLookAt(&nCell) + nCord;
+      let lookAt = getCellLookAt(nIndex) + nCord;
       if (lookAt.x != cord.x || lookAt.y != cord.y) {
         continue;
       }
 
-      let nIntention = getCellIntention(&nCell);
+      let nIntention = getCellIntention(nIndex);
 
       if (nIntention == ${CELL_INTENTION_MOVE}u) {
-        setCellIntention(&nCell, 0u);
-        let variant = getCellVariant(&cell);
+        setCellIntention(nIndex, 0u);
+        let variant = getCellVariant(currentIndex);
         if (variant == ${CELL_VARIANT_WALL}u) {
-          grid.cells[nIndex] = nCell;
           continue;
         }
         if (variant == ${CELL_VARIANT_EMPTY}u) {
-          grid.cells[currentIndex] = nCell;
+          grid.cells[currentIndex] = grid.cells[nIndex];
           grid.cells[nIndex] = Cell();
           return;
         }
         if (variant == ${CELL_VARIANT_FOOD}u) {
-          setCellStamina(&nCell, getCellStamina(&nCell) + ${CELL_STAMINA_EAT}u);
-          grid.cells[currentIndex] = nCell;
-          grid.cells[nIndex] = Cell();
+          addCellPredatorPoint(nIndex, ${CELL_STAMINA_EAT}u);
+          setCellStamina(nIndex, getCellStamina(nIndex) + ${CELL_STAMINA_EAT}u);
+          grid.cells[currentIndex] = Cell();
           return;
         }
         if (variant == ${CELL_VARIANT_LIFE}u) {
-          let stamina = i32(getCellStamina(&cell));
-          let hit = i32(getCellStamina(&nCell)) / 2 + 1;
+          let stamina = i32(getCellStamina(currentIndex));
+          let hit = i32(getCellStamina(nIndex)) / 2 + 1;
           let newStamina = stamina - hit;
           if (newStamina <= 0) {
-            setCellVariant(&cell, ${CELL_VARIANT_FOOD}u);
-            grid.cells[currentIndex] = cell;
+            setCellVariant(currentIndex, ${CELL_VARIANT_FOOD}u);
             return;
           }
-          setCellStamina(&cell, u32(newStamina));
-          grid.cells[currentIndex] = cell;
+          setCellStamina(currentIndex, u32(newStamina));
         }
       }
       if (nIntention == ${CELL_INTENTION_DIVISION}u) {
-        setCellIntention(&nCell, 0u);
-        let initialStamina = getCellStamina(&nCell);
-        setCellStamina(&nCell, u32(f32(initialStamina) * ${CELL_STAMINA_PARENT_DIVISION_FACTOR}));
-        grid.cells[nIndex] = nCell;
-        setCellStamina(&nCell, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
-        grid.cells[currentIndex] = nCell;
+        setCellIntention(nIndex, 0u);
+        let initialStamina = getCellStamina(nIndex);
+        setCellStamina(nIndex, u32(f32(initialStamina) * ${CELL_STAMINA_PARENT_DIVISION_FACTOR}));
+        grid.cells[currentIndex] = grid.cells[nIndex];
+        setCellStamina(currentIndex, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
         return;
       }
     }

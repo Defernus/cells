@@ -16,7 +16,7 @@ import {
   CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
 } from "constants/cell";
-import includeCellUtils from "shaders/cell.util";
+import { includeCellSetters, includeCellGetters, includeCell } from "shaders/cell.util";
 
 interface Props {
   device: GPUDevice;
@@ -29,13 +29,16 @@ const createGridActionsShader = (props: Props): GPUShaderModule => {
 
   const code = /* wgsl */`
 
-${includeCellUtils()}
+${includeCell()}
 
 [[block]] struct Grid {
   cells: array<Cell>;
 };
 
 [[group(0), binding(0)]] var<storage, write> grid: Grid;
+
+${includeCellGetters()}
+${includeCellSetters()}
 
 [[stage(compute), workgroup_size(8, 8)]]
 fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
@@ -50,68 +53,61 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   }
 
   let index = getIndex(cord, gridSize);
-  var cell = grid.cells[index];
 
-  let cellVariant = getCellVariant(&cell);
+  let cellVariant = getCellVariant(index);
 
   if (cellVariant != ${CELL_VARIANT_LIFE}u) {
-    grid.cells[index] = cell;
     return;
   }
 
   // life processing
-  let initialCursor = getCellCursor(&cell);
+  let initialCursor = getCellCursor(index);
   var cursor = initialCursor;
 
-  var newStamina = i32(getCellStamina(&cell)) + ${CELL_STAMINA_FRAME};
+  var newStamina = i32(getCellStamina(index)) + ${CELL_STAMINA_FRAME};
 
   if (newStamina > ${CELL_STAMINA_DIVISION_MAX}) {
-    let lookAtCord = getCellLookAt(&cell) + cord;
+    let lookAtCord = getCellLookAt(index) + cord;
     let lookAtIndex = getIndex(lookAtCord, gridSize);
-    var lookAtCell = grid.cells[lookAtIndex];
-    if (getCellVariant(&lookAtCell) != ${CELL_VARIANT_EMPTY}u) {
-      setCellVariant(&cell, ${CELL_VARIANT_FOOD}u);
-      grid.cells[index] = cell;
+    if (getCellVariant(lookAtIndex) != ${CELL_VARIANT_EMPTY}u) {
+      setCellVariant(index, ${CELL_VARIANT_FOOD}u);
       return;
     }
-    setCellIntention(&cell, ${CELL_INTENTION_DIVISION}u);
-    grid.cells[index] = cell;
+    setCellIntention(index, ${CELL_INTENTION_DIVISION}u);
     return;
   }
 
   for (; cursor != initialCursor + ${CELL_GENES_TO_PROCESS}u; cursor = cursor + 1u) {
-    let gen = getCellGen(&cell, cursor % ${CELL_GENES_SIZE}u);
+    let gen = getCellGen(index, cursor % ${CELL_GENES_SIZE}u);
 
     if (gen == ${CELL_GEN_WAIT}u) {
       continue;
     }
     if (gen >= ${CELL_GEN_ROTATE_RIGHT_1}u && gen <= ${CELL_GEN_ROTATE_RIGHT_7}u) {
-      rotateCell(&cell, i32(gen) - ${CELL_GEN_ROTATE_RIGHT_1} + 1);
+      rotateCell(index, i32(gen) - ${CELL_GEN_ROTATE_RIGHT_1} + 1);
       continue;
     }
     if (gen == ${CELL_GEN_MOVE}u) {
-      setCellIntention(&cell, ${CELL_INTENTION_MOVE}u);  
+      setCellIntention(index, ${CELL_INTENTION_MOVE}u);  
       cursor = cursor + 1u;
       newStamina = newStamina + ${CELL_STAMINA_MOVEMENT};
       break;
     }
     if (gen == ${CELL_GEN_PHOTOSYNTHESIS}u) {
-      addCellPlantPoint(&cell, ${CELL_STAMINA_PHOTOSYNTHESIS}u);
+      addCellPlantPoint(index, ${CELL_STAMINA_PHOTOSYNTHESIS}u);
       cursor = cursor + 1u;
       newStamina = newStamina + ${CELL_STAMINA_PHOTOSYNTHESIS};
       break;
     }
   }
 
-  setCellCursor(&cell, cursor % ${CELL_GENES_SIZE}u);
+  setCellCursor(index, cursor % ${CELL_GENES_SIZE}u);
 
   if (newStamina <= 0) {
-    cell = Cell();
+    grid.cells[index] = Cell();
   } else {
-    setCellStamina(&cell, u32(newStamina));
+    setCellStamina(index, u32(newStamina));
   }
-
-  grid.cells[index] = cell;
 }
 
   `;

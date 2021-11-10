@@ -13,8 +13,7 @@
     CELL_SIZE,
     CELL_VARIANT_LIFE,
   } from "constants/cell";
-  import setCell from "utils/calls/setCell";
-  import { createCell, logCellData } from "utils/calls/Cell";
+import Cell from "utils/calls/Cell";
 
   export let width: number;
   export let height: number;
@@ -115,32 +114,32 @@
 
     const initialGrid = new Uint8Array(width * height * CELL_SIZE);
 
-    const plantCell = createCell({
+    const plantCell = new Cell().setValues({
       variant: CELL_VARIANT_LIFE,
       genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS],
       stamina: 16,
       direction: 3,
     });
-    const predatorCell = createCell({
+    const predatorCell = new Cell().setValues({
       variant: CELL_VARIANT_LIFE,
       genes: [CELL_GEN_MOVE],
       stamina: 64,
       direction: 7,
     });
 
-    for(let i = 0; i != 4; ++i) {
-      setCell(
+    for(let i = 0; i != 7; ++i) {
+      plantCell.putToGrid(
         initialGrid,
-        plantCell,
-        { x: Math.floor(width / 2) - i, y: Math.floor(height / 2) },
-        { x: width, y: height },
+        Math.floor(width / 2) - i,
+        Math.floor(height / 2),
+        width,
       );
     }
-    setCell(
+    predatorCell.putToGrid(
       initialGrid,
-      predatorCell,
-      { x: Math.floor(width / 2) + 2, y: Math.floor(height / 2) },
-      { x: width, y: height },
+      Math.floor(width / 2) + 2,
+      Math.floor(height / 2),
+      width,
     );
 
     actionsPipeline = device.createComputePipeline({
@@ -209,7 +208,7 @@
     await resultBuffer.mapAsync(GPUMapMode.READ);
     const cellData = new Uint8Array(resultBuffer.getMappedRange(cellOffset, CELL_SIZE));
     console.log("\n\ncell at", x, y);
-    logCellData([...cellData]);
+    new Cell(cellData).log();
 
     resultBuffer.unmap();
   }

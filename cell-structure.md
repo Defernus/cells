@@ -3,15 +3,14 @@
 | bytes offset | type             | description |
 | ------------ | ---------------- | ----------- |
 | 0            | array\<u8\>[256] | genes       | 
-| 256          | u16              | cursor      |
-| 258          | u16              | stamina     |
-| 260          | u32              | age         |
-| 264          | u8               | variant     |
-| 265          | u8               | plant       |
-| 266          | u8               | predator    |
-| 267          | u8               | intention   |
-| 268          | u8               | direction   |
-| 269-271      | -                | *reserved*  |
+| 256          | u32              | cursor      |
+| 260          | u32              | stamina     |
+| 264          | u32              | age         |
+| 268          | u32              | variant     |
+| 272          | u32              | plant       |
+| 276          | u32              | predator    |
+| 280          | u32              | intention   |
+| 284          | u32              | direction   |
 
 
 ## Genes
@@ -24,7 +23,6 @@
 
 
 ## Variant
-### Unsigned 8-bit integer
 | value | description      |
 | ----- | ---------------- |
 | 0     | empty space      |
@@ -34,38 +32,32 @@
 
 
 ## Stamina
-### Unsigned 16-bit integer  
 Stamina is required for every cell action. Each action requires a different amount of stamina. Also, stamina decreases with each cycle.
 
 
 ## Cursor
-### Unsigned 16-bit integer
 Represents current gen position.  
 Note: 2 bytes reserved for future versions.
 
 
 ## Age
-### Unsigned 8-bit integer
 Increases every cycle.
 
 
 ## Predator
-### Unsigned 8-bit integer
 Increases each time a cell eats another cell.
 
 
 ## Intention
-### Unsigned 8-bit integer
 Stores cell's movement action intention to process it
+// TODO intentions list
 
 
 ## Plant
-### Unsigned 8-bit integer
 Increases each time a cell gains stamina through photosynthesis.
 
 
 ## Direction
-### Unsigned 8-bit integer
 Directions:
 ||||
 |---|---|---|

@@ -5,15 +5,23 @@ import {
   CELL_VARIANT_WALL,
 } from "constants/cell";
 
-const includeCellUtils = (): string => /* wgsl */`
+export const includeCell = (): string => /* wgsl */`
 
 struct Cell {
   genes: array<u32, 64>;
-  stamina_cursor: u32;
+  stamina: u32;
+  cursor: u32;
   age: u32;
-  intention_predator_plant_variant: u32;
+  intention: u32;
+  predator: u32;
+  plant: u32;
+  variant: u32;
   direction: u32;
 };
+
+`;
+
+export const includeCellGetters = (): string => /* wgsl */`
 
 fn mod(a: i32, b: i32) -> i32 {
   return ((a % b) + b) % b;
@@ -23,47 +31,36 @@ fn getIndex(cord: vec2<i32>, gridSize: vec2<i32>) -> u32 {
   return u32(mod(cord.x, gridSize.x) + mod(cord.y, gridSize.y) * gridSize.x);
 }
 
-fn getCellVariant(cell: ptr<function, Cell>) -> u32 {
-  return (*cell).intention_predator_plant_variant & 0x000000ffu;
-}
-
-fn setCellVariant(cell: ptr<function, Cell>, variant: u32) {
-  (*cell).intention_predator_plant_variant =
-    ((*cell).intention_predator_plant_variant & 0xffffff00u) | (variant & 0xffu);
-}
-
-fn getCellIntention(cell: ptr<function, Cell>) -> u32 {
-  return ((*cell).intention_predator_plant_variant >> 24u) & 0x000000ffu;
-}
-
-fn getCellCursor(cell: ptr<function, Cell>) -> u32 {
-  return (*cell).stamina_cursor & 0x0000ffffu;
-}
-
-fn getCellStamina(cell: ptr<function, Cell>) -> u32 {
-  return ((*cell).stamina_cursor >> 16u) & 0x0000ffffu;
-}
-fn setCellStamina(cell: ptr<function, Cell>, intention: u32) {
-  (*cell).stamina_cursor = ((*cell).stamina_cursor & 0x0000ffffu) | (intention << 16u);
-}
-
-fn getCellGen(cell: ptr<function, Cell>, cursor: u32) -> u32 {
-  var genes = (*cell).genes;
+fn getCellGen(index: u32, cursor: u32) -> u32 {
+  var genes = grid.cells[index].genes;
   let clusterIndex: u32 = cursor / 4u;
   let genCluster = genes[clusterIndex];
   return (genCluster >> ((cursor % 4u) * 8u)) & 0x000000ffu;
 }
 
-fn getCellDirection(cell: ptr<function, Cell>) -> u32 {
-  return (*cell).direction & 0x7u;
+fn getCellStamina(index: u32) -> u32 {
+  return grid.cells[index].stamina;
 }
-
-fn setCellDirection(cell: ptr<function, Cell>, direction: u32) {
-  (*cell).direction = ((*cell).direction & 0xfffffff0u) | (direction & 0x7u);
+fn getCellCursor(index: u32) -> u32 {
+  return grid.cells[index].cursor;
 }
-
-fn rotateCell(cell: ptr<function, Cell>, rotation: i32) {
-  setCellDirection(cell, u32(mod(i32(getCellDirection(cell)) + rotation, 8)));
+fn getCellAge(index: u32) -> u32 {
+  return grid.cells[index].age;
+}
+fn getCellIntention(index: u32) -> u32 {
+  return grid.cells[index].intention;
+}
+fn getCellPredator(index: u32) -> u32 {
+  return grid.cells[index].predator;
+}
+fn getCellPlant(index: u32) -> u32 {
+  return grid.cells[index].plant;
+}
+fn getCellVariant(index: u32) -> u32 {
+  return grid.cells[index].variant;
+}
+fn getCellDirection(index: u32) -> u32 {
+  return grid.cells[index].direction;
 }
 
 fn getXByDir(dir: u32) -> i32 {
@@ -80,46 +77,13 @@ fn getYByDir(dir: u32) -> i32 {
   return dirs[dir];
 }
 
-fn getCellLookAt(cell: ptr<function, Cell>) -> vec2<i32> {
-  let dir = getCellDirection(cell);
+fn getCellLookAt(index: u32) -> vec2<i32> {
+  let dir = grid.cells[index].direction;
   return vec2<i32>(getXByDir(dir), getYByDir(dir));
 }
 
-fn setCellIntention(cell: ptr<function, Cell>, intention: u32) {
-  (*cell).intention_predator_plant_variant =
-    ((*cell).intention_predator_plant_variant & 0x00ffffffu) | (intention << 24u);
-}
-
-fn setCellCursor(cell: ptr<function, Cell>, cursor: u32) {
-  (*cell).stamina_cursor = ((*cell).stamina_cursor & 0xffff0000u) | (cursor & 0x0000ffffu);
-}
-
-fn getCellPredatorPoints(cell: ptr<function, Cell>) -> u32 {
-  return ((*cell).intention_predator_plant_variant >> 16u) & 0xffu;
-}
-
-fn addCellPredatorPoint(cell: ptr<function, Cell>, value: u32) {
-  var points = getCellPredatorPoints(cell) + value;
-  if (points > 0xffu) {
-    points = 0xffu;
-  }
-  (*cell).intention_predator_plant_variant = ((*cell).intention_predator_plant_variant & 0xffff00ffu) | ((points & 0xffu) << 16u);
-}
-
-fn getCellPlantPoints(cell: ptr<function, Cell>) -> u32 {
-  return ((*cell).intention_predator_plant_variant >> 8u) & 0xffu;
-}
-
-fn addCellPlantPoint(cell: ptr<function, Cell>, value: u32) {
-  var points = getCellPlantPoints(cell) + value;
-  if (points > 0xffu) {
-    points = 0xffu;
-  }
-  (*cell).intention_predator_plant_variant = ((*cell).intention_predator_plant_variant & 0xffff00ffu) | ((points & 0xffu) << 8u);
-}
-
-fn getCellColor(cell: ptr<function, Cell>) -> vec4<f32> {
-  let variant = getCellVariant(cell);
+fn getCellColor(index: u32) -> vec4<f32> {
+  let variant = grid.cells[index].variant;
   if (variant == ${CELL_VARIANT_EMPTY}u) {
     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
   }
@@ -131,14 +95,56 @@ fn getCellColor(cell: ptr<function, Cell>) -> vec4<f32> {
   }
   if (variant == ${CELL_VARIANT_LIFE}u) {
     return vec4<f32>(
-      f32(getCellPredatorPoints(cell)) / 512.0 + 0.5,
-      f32(getCellPlantPoints(cell)) / 512.0 + 0.5,
+      f32(grid.cells[index].predator) / 512.0 + 0.5,
+      f32(grid.cells[index].plant) / 512.0 + 0.5,
       0.0, 1.0,
     );
   }
   return vec4<f32>(1.0, 0.0, 1.0, 1.0);
 }
 
+
 `;
 
-export default includeCellUtils;
+export const includeCellSetters = (): string => /* wgsl */`
+
+fn setCellStamina(index: u32, value: u32) {
+  grid.cells[index].stamina = value;
+}
+fn setCellCursor(index: u32, value: u32) {
+  grid.cells[index].cursor = value;
+}
+fn setCellAge(index: u32, value: u32) {
+  grid.cells[index].age = value;
+}
+fn setCellIntention(index: u32, value: u32) {
+  grid.cells[index].intention = value;
+}
+fn setCellPredator(index: u32, value: u32) {
+  grid.cells[index].predator = value;
+}
+fn setCellPlant(index: u32, value: u32) {
+  grid.cells[index].plant = value;
+}
+fn setCellVariant(index: u32, value: u32) {
+  grid.cells[index].variant = value;
+}
+fn setCellDirection(index: u32, value: u32) {
+  grid.cells[index].direction = value;
+}
+
+fn rotateCell(index: u32, rotation: i32) {
+  grid.cells[index].direction = u32(mod(i32(grid.cells[index].direction) + rotation, 8));
+}
+
+fn addCellPredatorPoint(index: u32, value: u32) {
+  var points = grid.cells[index].predator + value;
+  grid.cells[index].predator = points;
+}
+
+fn addCellPlantPoint(index: u32, value: u32) {
+  var points = grid.cells[index].plant + value;
+  grid.cells[index].plant = points;
+}
+
+`;
