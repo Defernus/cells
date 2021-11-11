@@ -61,12 +61,12 @@ export const cellStructure: {
   [CellPropName.Plant]: {
     wgslType: "u32",
     bytesOffset: getBytesOffset(4),
-    getValue: (cell) => cell.getU32FromData(cellStructure.variant.bytesOffset),
+    getValue: (cell) => cell.getU32FromData(cellStructure.plant.bytesOffset),
   },
   [CellPropName.Variant]: {
     wgslType: "u32",
     bytesOffset: getBytesOffset(4),
-    getValue: (cell) => cell.getU32FromData(cellStructure.plant.bytesOffset),
+    getValue: (cell) => cell.getU32FromData(cellStructure.variant.bytesOffset),
   },
   [CellPropName.Direction]: {
     wgslType: "u32",

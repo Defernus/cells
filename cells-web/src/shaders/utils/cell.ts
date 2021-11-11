@@ -7,7 +7,7 @@ import {
   CELL_VARIANT_LIFE,
   CELL_VARIANT_WALL,
 } from "constants/cell";
-import { cellStructure } from "utils/calls/Cell";
+import { cellStructure } from "utils/cells/Cell";
 
 const cellProps = Object.entries(cellStructure).map(([name, { wgslType }]) => `${name}: ${wgslType};`);
 

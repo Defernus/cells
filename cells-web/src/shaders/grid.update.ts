@@ -2,9 +2,7 @@ import {
   CELL_INTENTION_DIVISION,
   CELL_INTENTION_HIT,
   CELL_INTENTION_MOVE,
-  CELL_STAMINA_CHILD_DIVISION_FACTOR,
   CELL_STAMINA_EAT,
-  CELL_STAMINA_PARENT_DIVISION_FACTOR,
   CELL_VARIANT_EMPTY,
   CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
@@ -104,7 +102,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       }
       if (nIntention == ${CELL_INTENTION_DIVISION}u) {
         setCellIntention(nIndex, 0u);
-        divide(nIndex, currentIndex, 0.1);
+        divide(nIndex, currentIndex, 1.0);
         continue;
       }
     }

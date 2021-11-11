@@ -1,6 +1,6 @@
 import { CELL_SIZE } from "constants/cell";
-import type Cell from "utils/calls/Cell";
-import getCellOffset, { Cord } from "utils/calls/getCellOffset";
+import type Cell from "utils/cells/Cell";
+import getCellOffset, { Cord } from "utils/cells/getCellOffset";
 
 const setCell = (grid: Uint8Array, cell: Cell, cord: Cord, gridSize: Cord): void => {
   const offset = getCellOffset(cord, gridSize);
