@@ -1,5 +1,7 @@
 import {
   CELL_GENES_SIZE,
+  CELL_STAMINA_CHILD_DIVISION_FACTOR,
+  CELL_STAMINA_PARENT_DIVISION_FACTOR,
   CELL_VARIANT_EMPTY,
   CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
@@ -9,11 +11,17 @@ import { cellStructure } from "utils/calls/Cell";
 
 const cellProps = Object.entries(cellStructure).map(([name, { wgslType }]) => `${name}: ${wgslType};`);
 
-export const includeCell = (): string => /* wgsl */`
+export const includeGrid = (): string => /* wgsl */`
 
 struct Cell {
   ${cellProps.join("\n  ")}
 };
+
+[[block]] struct Grid {
+  cells: array<Cell>;
+};
+
+[[group(0), binding(0)]] var<storage, write> grid: Grid;
 
 `;
 
@@ -145,6 +153,33 @@ fn addCellPlantPoint(index: u32, value: u32) {
 
 fn addCellCursor(index: u32, value: u32) {
   setCellCursor(index, (getCellCursor(index) + value) % ${CELL_GENES_SIZE}u);
+}
+
+fn setCellGen(index: u32, cursor: u32, value: u32) {
+  var genes = grid.cells[index].genes;
+  let clusterIndex: u32 = cursor / 4u;
+  let genCluster = genes[clusterIndex];
+  let clusterOffset = (cursor % 4u) * 8u;
+  let clusterMask = 0xffu << clusterOffset;
+  grid.cells[index].genes[clusterIndex] = (genCluster & ~clusterMask) | ((value << clusterOffset) & clusterMask);
+}
+
+// TODO multiple genes mutations
+fn mutate(index: u32, mutationFactor: f32) {
+  let genToMutate = rnd(index) % u32(${CELL_GENES_SIZE}.0 / mutationFactor);
+  if (genToMutate < ${CELL_GENES_SIZE}u) {
+    setCellGen(index, genToMutate, rnd(index) % 256u);
+  }
+}
+
+fn divide(index: u32, destIndex: u32, mutationFactor: f32) {
+  let initialStamina = getCellStamina(index);
+  setCellStamina(index, u32(f32(initialStamina) * ${CELL_STAMINA_PARENT_DIVISION_FACTOR}));
+  grid.cells[destIndex] = grid.cells[index];
+  setCellStamina(destIndex, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
+  setCellDirection(destIndex, rnd(index) % 8u);
+  setCellCursor(destIndex, 0u);
+  mutate(destIndex, mutationFactor);
 }
 
 `;

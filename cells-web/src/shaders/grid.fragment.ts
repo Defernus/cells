@@ -1,22 +1,16 @@
 import { CELL_VARIANT_EMPTY, CELL_VARIANT_LIFE } from "constants/cell";
-import { includeCellGetters, includeCell } from "shaders/cell.util";
+import { includeCellGetters, includeGrid } from "shaders/utils/cell";
 
 interface Props {
   width: number;
   height: number;
+  device: GPUDevice;
 }
 
-const createGridFragmentShader = ({ width, height }: Props): string => 
-/* wgsl */`
+const createGridFragmentShader = ({ device, width, height }: Props): GPUShaderModule => device.createShaderModule({
+  code: /* wgsl */ `
 
-${includeCell()}
-
-[[block]] struct Grid {
-  cells: array<Cell>;
-};
-
-[[group(0), binding(0)]] var<storage, read> grid: Grid;
-
+${includeGrid()}
 ${includeCellGetters()}
 
 [[stage(fragment)]]
@@ -57,6 +51,6 @@ fn main([[location(0)]] fragUV: vec2<f32>) -> [[interpolate(flat), location(0)]]
   return getCellColor(index);
 }
   
-`;
+`});
 
 export default createGridFragmentShader;

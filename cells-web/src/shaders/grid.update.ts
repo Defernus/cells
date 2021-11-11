@@ -9,7 +9,8 @@ import {
   CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
 } from "constants/cell";
-import { includeCellGetters, includeCellSetters, includeCell } from "shaders/cell.util";
+import { includeCellGetters, includeCellSetters, includeGrid } from "shaders/utils/cell";
+import includeRandom from "shaders/utils/random";
 
 interface Props {
   device: GPUDevice;
@@ -22,14 +23,8 @@ const createGridUpdateShader = (props: Props): GPUShaderModule => {
 
   const code = /* wgsl */`
 
-${includeCell()}
-
-[[block]] struct Grid {
-  cells: array<Cell>;
-};
-
-[[group(0), binding(0)]] var<storage, write> grid: Grid;
-
+${includeGrid()}
+${includeRandom()}
 ${includeCellGetters()}
 ${includeCellSetters()}
 
@@ -49,6 +44,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   let cell = &grid.cells[currentIndex];
 
   // process all neighbor cells
+  // !TODO shuffle it and process in random order
   for (var i = -1; i != 2; i = i + 1) {
     for (var j = -1; j != 2; j = j + 1) {
       // skip current cell
@@ -108,10 +104,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       }
       if (nIntention == ${CELL_INTENTION_DIVISION}u) {
         setCellIntention(nIndex, 0u);
-        let initialStamina = getCellStamina(nIndex);
-        setCellStamina(nIndex, u32(f32(initialStamina) * ${CELL_STAMINA_PARENT_DIVISION_FACTOR}));
-        grid.cells[currentIndex] = grid.cells[nIndex];
-        setCellStamina(currentIndex, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
+        divide(nIndex, currentIndex, 0.1);
         continue;
       }
     }

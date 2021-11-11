@@ -7,14 +7,12 @@
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
-CELL_GEN_END,
-    CELL_GEN_MOVE,
     CELL_GEN_PHOTOSYNTHESIS,
     CELL_GEN_ROTATE_RIGHT_1,
     CELL_SIZE,
     CELL_VARIANT_LIFE,
   } from "constants/cell";
-import Cell from "utils/calls/Cell";
+  import Cell from "utils/calls/Cell";
 
   export let width: number;
   export let height: number;
@@ -97,6 +95,12 @@ import Cell from "utils/calls/Cell";
   };
 
   onMount(async () => {
+    window.onkeypress = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        isSimpulationRunning ? stop() : start();
+        e.preventDefault();
+      }
+    };
     const adapter = await navigator.gpu?.requestAdapter();
     if (!adapter) {
       // !TODO error handling
@@ -121,35 +125,75 @@ import Cell from "utils/calls/Cell";
       stamina: 16,
       direction: 3,
     });
-    const predatorCell = new Cell().setValues({
-      variant: CELL_VARIANT_LIFE,
-      genes: [CELL_GEN_MOVE],
-      stamina: 64,
-      direction: 7,
-    });
 
-    for(let i = 0; i != 6; ++i) {
-      plantCell.putToGrid(
-        initialGrid,
-        Math.floor(width / 2) - i,
-        Math.floor(height / 2),
-        width,
-      );
-    }
-    predatorCell.putToGrid(
+    plantCell.putToGrid(
       initialGrid,
-      Math.floor(width / 2) + 3,
+      Math.floor(width / 2),
       Math.floor(height / 2),
       width,
     );
 
+    const actionsLayout = device.createPipelineLayout({
+      bindGroupLayouts: [device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage"
+            }
+          },
+          {
+            binding: 1,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage"
+            }
+          },
+        ]
+      })],
+    });
+
+    const updateLayout = device.createPipelineLayout({
+      bindGroupLayouts: [device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: "storage"
+            }
+          },
+          {
+            binding: 1,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: "storage" },
+          },
+        ],
+      })],
+    });
+
+    const renderLayout = device.createPipelineLayout({
+      bindGroupLayouts: [device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            buffer: { type: "storage" },
+          },
+        ],
+      })],
+    });
+
     actionsPipeline = device.createComputePipeline({
+      layout: actionsLayout,
       compute: {
         module: createGridActionsShader({ device, width, height }),
         entryPoint: "main",
       }
     });
     updatePipeline = device.createComputePipeline({
+      layout: updateLayout,
       compute: {
         module: createGridUpdateShader({ device, width, height }),
         entryPoint: "main",
@@ -157,22 +201,15 @@ import Cell from "utils/calls/Cell";
     });
 
     renderPipeline = device.createRenderPipeline({
+      layout: renderLayout,
       vertex: {
-        module: device.createShaderModule({
-          code: createGridVertexShader(),
-        }),
+        module: createGridVertexShader({ device }),
         entryPoint: "main",
       },
       fragment: {
-        module: device.createShaderModule({
-          code: createGridFragmentShader({ width, height }),
-        }),
+        module: createGridFragmentShader({ device, width, height }),
         entryPoint: "main",
-        targets: [
-          {
-            format: presentationFormat,
-          },
-        ],
+        targets: [{ format: presentationFormat }],
       },
       primitive: {
         topology: "triangle-list",
@@ -187,7 +224,7 @@ import Cell from "utils/calls/Cell";
       actionsPipeline,
       updatePipeline,
       renderPipeline,
-      cellSize: CELL_SIZE,
+
     });
 
     resultBuffer = device.createBuffer({
@@ -199,7 +236,7 @@ import Cell from "utils/calls/Cell";
   });
 
   const handleGridClick: svelte.JSX.MouseEventHandler<HTMLCanvasElement> = async (e) => {
-    const scale = 32;
+    const scale = 1;
     const { offsetLeft, offsetTop } = e.target as HTMLCanvasElement;
     const x = Math.floor((e.clientX - offsetLeft) / scale);
     const y = Math.floor((height * scale - e.clientY + offsetTop) / scale);
@@ -218,8 +255,8 @@ import Cell from "utils/calls/Cell";
 <style>
   .grid {
     image-rendering: pixelated;
-    transform: scale(32);
-    transform-origin: top left;
+    /* transform: scale(32);
+    transform-origin: top left; */
 
     /* https://stackoverflow.com/questions/69867152/how-to-disable-filtering-on-canvas-with-webgpu-context */
     animation: fix-image-rendering-bug .0001s;

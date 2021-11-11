@@ -1,5 +1,9 @@
-const createGridVertexShader = (): string => 
-/* wgsl */`
+interface Props {
+  device: GPUDevice;
+}
+
+const createGridVertexShader = ({ device }: Props): GPUShaderModule => device.createShaderModule({
+/* wgsl */ code: `
 
 struct VertexOutput {
   [[builtin(position)]] Position: vec4<f32>;
@@ -22,6 +26,6 @@ fn main([[builtin(vertex_index)]] VertexIndex: u32) -> VertexOutput {
   return output;
 }
   
-`;
+`});
 
 export default createGridVertexShader;

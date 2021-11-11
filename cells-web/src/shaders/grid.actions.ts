@@ -19,7 +19,8 @@ import {
   CELL_STAMINA_EAT,
   CELL_INTENTION_HIT,
 } from "constants/cell";
-import { includeCellSetters, includeCellGetters, includeCell } from "shaders/cell.util";
+import { includeCellSetters, includeCellGetters, includeGrid } from "shaders/utils/cell";
+import includeRandom from "shaders/utils/random";
 
 interface Props {
   device: GPUDevice;
@@ -32,14 +33,8 @@ const createGridActionsShader = (props: Props): GPUShaderModule => {
 
   const code = /* wgsl */`
 
-${includeCell()}
-
-[[block]] struct Grid {
-  cells: array<Cell>;
-};
-
-[[group(0), binding(0)]] var<storage, write> grid: Grid;
-
+${includeGrid()}
+${includeRandom()}
 ${includeCellGetters()}
 ${includeCellSetters()}
 
