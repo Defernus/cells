@@ -141,14 +141,26 @@ fn rotateCell(index: u32, rotation: i32) {
   grid.cells[index].direction = u32(mod(i32(grid.cells[index].direction) + rotation, 8));
 }
 
-fn addCellPredatorPoint(index: u32, value: u32) {
-  var points = grid.cells[index].predator + value;
-  grid.cells[index].predator = points;
+fn addCellPredatorPoint(index: u32, value: i32) {
+  var points = i32(grid.cells[index].predator) + value;
+  if (points > 255) {
+    points = 255;
+  }
+  if (points < 0) {
+    points = 0;
+  }
+  grid.cells[index].predator = u32(points);
 }
 
-fn addCellPlantPoint(index: u32, value: u32) {
-  var points = grid.cells[index].plant + value;
-  grid.cells[index].plant = points;
+fn addCellPlantPoint(index: u32, value: i32) {
+  var points = i32(grid.cells[index].plant) + value;
+  if (points > 255) {
+    points = 255;
+  }
+  if (points < 0) {
+    points = 0;
+  }
+  grid.cells[index].plant = u32(points);
 }
 
 fn addCellCursor(index: u32, value: u32) {
@@ -177,7 +189,7 @@ fn divide(index: u32, destIndex: u32, mutationFactor: f32) {
   setCellStamina(index, u32(f32(initialStamina) * ${CELL_STAMINA_PARENT_DIVISION_FACTOR}));
   grid.cells[destIndex] = grid.cells[index];
   setCellStamina(destIndex, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
-  setCellDirection(destIndex, rnd(index) % 8u);
+  rotateCell(destIndex, 4);
   setCellCursor(destIndex, 0u);
   mutate(destIndex, mutationFactor);
 }

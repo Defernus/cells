@@ -74,6 +74,8 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
     setCellIntention(index, ${CELL_INTENTION_DIVISION}u);
     return;
   }
+  addCellPredatorPoint(index, -1);
+  addCellPlantPoint(index, -1);
 
   for (; cursor != initialCursor + ${CELL_GENES_TO_PROCESS}u; cursor = cursor + 1u) {
     let gen = getCellGen(index, cursor % ${CELL_GENES_SIZE}u);
@@ -95,6 +97,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
         break;
       }
       if (laVariant == ${CELL_VARIANT_FOOD}u) {
+        addCellPredatorPoint(index, ${CELL_STAMINA_EAT});
         newStamina = newStamina + ${CELL_STAMINA_EAT};
         grid.cells[lookAtIndex] = Cell();
         break;
@@ -114,7 +117,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       break;
     }
     if (gen == ${CELL_GEN_PHOTOSYNTHESIS}u) {
-      addCellPlantPoint(index, ${CELL_STAMINA_PHOTOSYNTHESIS}u);
+      addCellPlantPoint(index, ${CELL_STAMINA_PHOTOSYNTHESIS});
       cursor = cursor + 1u;
       newStamina = newStamina + ${CELL_STAMINA_PHOTOSYNTHESIS};
       break;

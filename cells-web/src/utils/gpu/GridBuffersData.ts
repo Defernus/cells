@@ -42,7 +42,8 @@ class GridBuffersData {
 
     const initialSeeds = new Uint32Array(width * height);
     initialSeeds.forEach((_, i) => {
-      [initialSeeds[i]] = crypto.getRandomValues(new Uint32Array(1));
+      // eslint-disable-next-line prefer-destructuring
+      initialSeeds[i] = crypto.getRandomValues(new Uint32Array(1))[0];
     });
 
     this.buffer = this.createBuffer(CELL_SIZE, initialGrid);

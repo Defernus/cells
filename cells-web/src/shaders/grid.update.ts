@@ -75,7 +75,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
           continue;
         }
         if (variant == ${CELL_VARIANT_FOOD}u) {
-          addCellPredatorPoint(nIndex, ${CELL_STAMINA_EAT}u);
+          addCellPredatorPoint(nIndex, ${CELL_STAMINA_EAT});
           setCellStamina(nIndex, getCellStamina(nIndex) + ${CELL_STAMINA_EAT}u);
           grid.cells[currentIndex] = Cell();
           addCellCursor(nIndex, 2u);
@@ -102,7 +102,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       }
       if (nIntention == ${CELL_INTENTION_DIVISION}u) {
         setCellIntention(nIndex, 0u);
-        divide(nIndex, currentIndex, 1.0);
+        divide(nIndex, currentIndex, 0.5);
         continue;
       }
     }

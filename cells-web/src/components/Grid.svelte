@@ -12,7 +12,7 @@
     CELL_SIZE,
     CELL_VARIANT_LIFE,
   } from "constants/cell";
-  import Cell from "utils/calls/Cell";
+  import Cell from "utils/cells/Cell";
 
   export let width: number;
   export let height: number;
@@ -236,7 +236,7 @@
   });
 
   const handleGridClick: svelte.JSX.MouseEventHandler<HTMLCanvasElement> = async (e) => {
-    const scale = 1;
+    const scale = 4;
     const { offsetLeft, offsetTop } = e.target as HTMLCanvasElement;
     const x = Math.floor((e.clientX - offsetLeft) / scale);
     const y = Math.floor((height * scale - e.clientY + offsetTop) / scale);
@@ -255,8 +255,8 @@
 <style>
   .grid {
     image-rendering: pixelated;
-    /* transform: scale(32);
-    transform-origin: top left; */
+    transform: scale(4);
+    transform-origin: top left;
 
     /* https://stackoverflow.com/questions/69867152/how-to-disable-filtering-on-canvas-with-webgpu-context */
     animation: fix-image-rendering-bug .0001s;
