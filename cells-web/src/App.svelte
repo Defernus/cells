@@ -7,9 +7,10 @@
   main {
     height: 100%;
     width: 100%;
+    overflow: hidden;
   }
 </style>
 
 <main>
-  <Grid width={512} height={512} />
+  <Grid width={256} height={256} />
 </main>

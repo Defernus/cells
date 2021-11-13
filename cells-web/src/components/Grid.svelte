@@ -138,9 +138,6 @@
       Math.floor(height / 2),
       width,
     );
-    plantCell.putToGrid(initialGrid, 1, 1, width);
-    plantCell.putToGrid(initialGrid, width - 2, height - 2, width);
-    plantCell.putToGrid(initialGrid, 1, height - 2, width);
 
     const actionsLayout = device.createPipelineLayout({
       bindGroupLayouts: [device.createBindGroupLayout({

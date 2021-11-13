@@ -78,8 +78,8 @@
     const { posX, posY, x, y } = getMouseData(e);
     pixelX = x;
     pixelY = y;
-    wrapper.style.left = `${posX + 20}px`;
-    wrapper.style.top = `${posY + 20}px`;
+    wrapper.style.left = `${posX + 30}px`;
+    wrapper.style.top = `${posY - 20 - WIDTH_PX/2}px`;
 
     magnifierCanvas.style.transform = `scale(${PIXEL_SCALE})`;
     magnifierCanvas.style.left = `${-(x - SIZE/2 + 0.5) * PIXEL_SCALE}px`;
