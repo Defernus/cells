@@ -61,6 +61,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   }
 
   // life processing
+  setCellAge(index, getCellAge(index) + 1u);
   let initialCursor = getCellCursor(index);
   var cursor = initialCursor;
 

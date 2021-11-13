@@ -195,6 +195,7 @@ fn divide(index: u32, destIndex: u32, mutationFactor: f32) {
   setCellStamina(destIndex, u32(f32(initialStamina) * ${CELL_STAMINA_CHILD_DIVISION_FACTOR}));
   rotateCell(destIndex, 4);
   setCellCursor(destIndex, 0u);
+  setCellAge(destIndex, 0u);
   mutate(destIndex, mutationFactor);
 }
 
