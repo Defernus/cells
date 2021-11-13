@@ -1,5 +1,5 @@
 import { CELL_VARIANT_EMPTY, CELL_VARIANT_LIFE } from "constants/cell";
-import { includeCellGetters, includeGrid } from "shaders/utils/cell";
+import { includeCellGetters, includeGrid } from "shaders/utils/cell.wgsl";
 
 interface Props {
   width: number;

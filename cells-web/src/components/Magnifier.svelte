@@ -1,8 +1,8 @@
 <script lang="ts">
   import type GridBuffersData from "utils/gpu/GridBuffersData";
   import type MouseData from "utils/mouseData";
-  import createGridFragmentShader from "shaders/grid.fragment";
-  import createGridVertexShader from "shaders/grid.vertex";
+  import createGridFragmentShader from "shaders/grid.fragment.wgsl";
+  import createGridVertexShader from "shaders/grid.vertex.wgsl";
 
   export let adapter: GPUAdapter;
   export let device: GPUDevice;
@@ -181,8 +181,6 @@
     position: absolute;
     image-rendering: pixelated;
     transform-origin: top left;
-
-    /* https://stackoverflow.com/questions/69867152/how-to-disable-filtering-on-canvas-with-webgpu-context */
     animation: fix-image-rendering-bug .0001s;
   }
   @keyframes fix-image-rendering-bug {

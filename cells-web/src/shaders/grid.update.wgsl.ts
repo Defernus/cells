@@ -7,8 +7,8 @@ import {
   CELL_VARIANT_FOOD,
   CELL_VARIANT_LIFE,
 } from "constants/cell";
-import { includeCellGetters, includeCellSetters, includeGrid } from "shaders/utils/cell";
-import includeRandom from "shaders/utils/random";
+import { includeCellGetters, includeCellSetters, includeGrid } from "shaders/utils/cell.wgsl";
+import includeRandom from "shaders/utils/random.wgsl";
 
 interface Props {
   device: GPUDevice;

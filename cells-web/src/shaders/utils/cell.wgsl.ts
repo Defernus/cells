@@ -141,8 +141,12 @@ fn setCellDirection(index: u32, value: u32) {
   grid.cells[index].direction = value;
 }
 
+fn rotate(direction: u32, rotation: i32) -> u32 {
+  return u32(mod(i32(direction) + rotation, 8));
+}
+
 fn rotateCell(index: u32, rotation: i32) {
-  grid.cells[index].direction = u32(mod(i32(grid.cells[index].direction) + rotation, 8));
+  grid.cells[index].direction = rotate(grid.cells[index].direction, rotation);
 }
 
 fn addCellPredatorPoint(index: u32, value: i32) {

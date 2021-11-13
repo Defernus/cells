@@ -1,17 +1,18 @@
 
 <script lang="ts">
   import { onMount } from "svelte";
-  import createGridActionsShader from "shaders/grid.actions";
-  import createGridUpdateShader from "shaders/grid.update";
-  import createGridVertexShader from "shaders/grid.vertex";
-  import createGridFragmentShader from "shaders/grid.fragment";
+  import createGridActionsShader from "shaders/grid.actions.wgsl";
+  import createGridUpdateShader from "shaders/grid.update.wgsl";
+  import createGridVertexShader from "shaders/grid.vertex.wgsl";
+  import createGridFragmentShader from "shaders/grid.fragment.wgsl";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
-    CELL_GEN_DIVIDE,
-    CELL_GEN_PHOTOSYNTHESIS,
-    CELL_GEN_ROTATE_RIGHT_1,
+    CELL_GEN_END,
+    CELL_GEN_GOTO,
+    CELL_GEN_MOVE,
     CELL_SIZE,
     CELL_VARIANT_LIFE,
+    CELL_VARIANT_WALL,
   } from "constants/cell";
   import Cell from "utils/cells/Cell";
   import Magnifier from "components/Magnifier.svelte";
@@ -106,6 +107,10 @@
         isSimpulationRunning ? stop() : start();
         e.preventDefault();
       }
+      if (e.code === "KeyX") {
+        processFrame();
+        e.preventDefault();
+      }
     };
     adapter = await navigator.gpu?.requestAdapter();
     if (!adapter) {
@@ -127,17 +132,23 @@
 
     const plantCell = new Cell().setValues({
       variant: CELL_VARIANT_LIFE,
-      genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS, CELL_GEN_DIVIDE],
-      stamina: 16,
+      genes: [CELL_GEN_END, CELL_GEN_GOTO, 0, 0, CELL_GEN_MOVE, CELL_GEN_END, CELL_GEN_END, CELL_GEN_END, CELL_GEN_END, CELL_GEN_END],
+      stamina: 120,
       direction: 3,
     });
 
-    plantCell.putToGrid(
-      initialGrid,
-      Math.floor(width / 2),
-      Math.floor(height / 2),
-      width,
-    );
+    const wallCell = new Cell().setValues({
+      variant: CELL_VARIANT_WALL,
+    });
+
+    const centerX = Math.floor(width / 2);
+    const centerY = Math.floor(height / 2);
+
+    plantCell.putToGrid(initialGrid, centerX - 5, centerY, width);
+
+    for (let i = 0; i != 10; ++i) {
+      wallCell.putToGrid(initialGrid, centerX, centerY + i - 5, width);
+    }
 
     const actionsLayout = device.createPipelineLayout({
       bindGroupLayouts: [device.createBindGroupLayout({
@@ -264,7 +275,6 @@
   .grid {
     image-rendering: pixelated;
     transform-origin: top left;
-
     /* https://stackoverflow.com/questions/69867152/how-to-disable-filtering-on-canvas-with-webgpu-context */
     animation: fix-image-rendering-bug .0001s;
   }

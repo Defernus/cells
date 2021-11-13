@@ -1,5 +1,4 @@
 import {
-  CELL_GENES_SIZE,
   CELL_GENES_TO_PROCESS,
   CELL_GEN_MOVE,
   CELL_GEN_PHOTOSYNTHESIS,
@@ -20,9 +19,13 @@ import {
   CELL_INTENTION_HIT,
   CELL_GEN_DIVIDE,
   CELL_STAMINA_DIVISION_MIN,
+  CELL_GEN_DIST,
+  CELL_GEN_GOTO,
+  CELL_GENES_SIZE,
 } from "constants/cell";
-import { includeCellSetters, includeCellGetters, includeGrid } from "shaders/utils/cell";
-import includeRandom from "shaders/utils/random";
+import { includeCellSetters, includeCellGetters, includeGrid } from "shaders/utils/cell.wgsl";
+import includeGetCellDist from "shaders/utils/getCellDist.wgsl";
+import includeRandom from "shaders/utils/random.wgsl";
 
 interface Props {
   device: GPUDevice;
@@ -39,6 +42,7 @@ ${includeGrid({ binding: 0 })}
 ${includeRandom({ binding: 1 })}
 ${includeCellGetters()}
 ${includeCellSetters()}
+${includeGetCellDist()}
 
 [[stage(compute), workgroup_size(8, 8)]]
 fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
@@ -62,8 +66,6 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
 
   // life processing
   setCellAge(index, getCellAge(index) + 1u);
-  let initialCursor = getCellCursor(index);
-  var cursor = initialCursor;
 
   var newStamina = i32(getCellStamina(index)) + ${CELL_STAMINA_FRAME};
 
@@ -80,8 +82,9 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   addCellPredatorPoint(index, -1);
   addCellPlantPoint(index, -1);
 
-  for (; cursor != initialCursor + ${CELL_GENES_TO_PROCESS}u; cursor = cursor + 1u) {
-    let gen = getCellGen(index, cursor % ${CELL_GENES_SIZE}u);
+  for (var i = 0u; i != ${CELL_GENES_TO_PROCESS}u; i = i + 1u) {
+    let gen = getCellGen(index, getCellCursor(index));
+    addCellCursor(index, 1u);
 
     if (gen == ${CELL_GEN_NEXT}u) {
       continue;
@@ -94,7 +97,6 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       newStamina = newStamina + ${CELL_STAMINA_MOVEMENT};
       let lookAtIndex = getIndex(getCellLookAt(index) + cord, gridSize);
       let lookAtVariant = getCellVariant(lookAtIndex);
-      cursor = cursor + 1u;
       if (lookAtVariant == ${CELL_VARIANT_EMPTY}u) {
         setCellIntention(index, ${CELL_INTENTION_MOVE}u);
         break;
@@ -121,12 +123,19 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
     }
     if (gen == ${CELL_GEN_PHOTOSYNTHESIS}u) {
       addCellPlantPoint(index, ${CELL_STAMINA_PHOTOSYNTHESIS});
-      cursor = cursor + 1u;
       newStamina = newStamina + ${CELL_STAMINA_PHOTOSYNTHESIS};
       break;
     }
-    if (gen == ${CELL_GEN_DIVIDE}u && newStamina > ${CELL_STAMINA_DIVISION_MIN}) {
-      cursor = cursor + 1u;
+    if (gen == ${CELL_GEN_GOTO}u) {
+      let g1 = getCellGen(index, (getCellCursor(index) + 1u) % ${CELL_GENES_SIZE}u);
+      let g2 = getCellGen(index, (getCellCursor(index) + 2u) % ${CELL_GENES_SIZE}u);
+      setCellCursor(index, ((g2 << 8u) | g1) % ${CELL_GENES_SIZE}u);
+      continue;
+    }
+    if (gen == ${CELL_GEN_DIVIDE}u) {
+      if (newStamina < ${CELL_STAMINA_DIVISION_MIN}) {
+        continue;
+      }
       let lookAtCord = getCellLookAt(index) + cord;
       let lookAtIndex = getIndex(lookAtCord, gridSize);
       if (getCellVariant(lookAtIndex) != ${CELL_VARIANT_EMPTY}u) {
@@ -136,13 +145,14 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       setCellIntention(index, ${CELL_INTENTION_DIVISION}u);
       break;
     }
+    if (gen == ${CELL_GEN_DIST}u) {
+      addCellCursor(index, getCellDist(index, gridSize) * 2u);
+      continue;
+    }
     if (gen == ${CELL_GEN_END}u) {
-      cursor = cursor + 1u;
       break;
     }
   }
-
-  setCellCursor(index, cursor % ${CELL_GENES_SIZE}u);
 
   if (newStamina <= 0) {
     grid.cells[index] = Cell();
