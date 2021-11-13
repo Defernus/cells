@@ -7,13 +7,15 @@
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
-CELL_GEN_DIVIDE,
+    CELL_GEN_DIVIDE,
     CELL_GEN_PHOTOSYNTHESIS,
     CELL_GEN_ROTATE_RIGHT_1,
     CELL_SIZE,
     CELL_VARIANT_LIFE,
   } from "constants/cell";
   import Cell from "utils/cells/Cell";
+  import Magnifier from "components/Magnifier.svelte";
+  import type MouseData from "utils/mouseData";
 
   export let width: number;
   export let height: number;
@@ -21,6 +23,7 @@ CELL_GEN_DIVIDE,
   let canvas: HTMLCanvasElement;
   let ctx: GPUCanvasContext;
   let device: GPUDevice;
+  let adapter: GPUAdapter;
   let gridGpuData: GridBuffersData;
   let actionsPipeline: GPUComputePipeline;
   let updatePipeline: GPUComputePipeline;
@@ -96,13 +99,15 @@ CELL_GEN_DIVIDE,
   };
 
   onMount(async () => {
+    const scale = (window.innerHeight - 100) / height;
+    canvas.style.transform = `scale(${scale})`;
     window.onkeypress = (e: KeyboardEvent) => {
       if (e.code === "Space") {
         isSimpulationRunning ? stop() : start();
         e.preventDefault();
       }
     };
-    const adapter = await navigator.gpu?.requestAdapter();
+    adapter = await navigator.gpu?.requestAdapter();
     if (!adapter) {
       // !TODO error handling
       throw new Error("failed to get webGPU adapter");
@@ -133,6 +138,9 @@ CELL_GEN_DIVIDE,
       Math.floor(height / 2),
       width,
     );
+    plantCell.putToGrid(initialGrid, 1, 1, width);
+    plantCell.putToGrid(initialGrid, width - 2, height - 2, width);
+    plantCell.putToGrid(initialGrid, 1, height - 2, width);
 
     const actionsLayout = device.createPipelineLayout({
       bindGroupLayouts: [device.createBindGroupLayout({
@@ -236,12 +244,10 @@ CELL_GEN_DIVIDE,
     processFrame();
   });
 
-  const handleGridClick: svelte.JSX.MouseEventHandler<HTMLCanvasElement> = async (e) => {
-    const scale = 4;
-    const { offsetLeft, offsetTop } = e.target as HTMLCanvasElement;
-    const x = Math.floor((e.clientX - offsetLeft) / scale);
-    const y = Math.floor((height * scale - e.clientY + offsetTop) / scale);
-
+  const handleGridClick = async ({ x, y }: MouseData) => {
+    if (isSimpulationRunning) {
+      return;
+    }
     const cellOffset = (x + y * width) * CELL_SIZE;
     
     await resultBuffer.mapAsync(GPUMapMode.READ);
@@ -254,9 +260,12 @@ CELL_GEN_DIVIDE,
 </script>
 
 <style>
+  .gridWrapper {
+    position: relative;
+  }
+
   .grid {
     image-rendering: pixelated;
-    transform: scale(4);
     transform-origin: top left;
 
     /* https://stackoverflow.com/questions/69867152/how-to-disable-filtering-on-canvas-with-webgpu-context */
@@ -282,11 +291,21 @@ CELL_GEN_DIVIDE,
       <button on:click={processFrame}>update</button>
     {/if}
   </div>
-  <canvas
-    class="grid"
-    bind:this={canvas}
-    on:click={handleGridClick}
-    width={width}
-    height={height}
-  />
+  <div class="gridWrapper">
+    <canvas
+      class="grid"
+      bind:this={canvas}
+      width={width}
+      height={height}
+    />
+    <Magnifier
+      device={device}
+      adapter={adapter}
+      width={width}
+      height={height}
+      gridCanvas={canvas}
+      onClick={handleGridClick}
+      gridGpuData={gridGpuData}
+    />
+  </div>
 </div>

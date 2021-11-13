@@ -11,5 +11,5 @@
 </style>
 
 <main>
-  <Grid width={128} height={128} />
+  <Grid width={512} height={512} />
 </main>
