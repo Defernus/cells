@@ -17,8 +17,9 @@ export const CELL_GEN_ROTATE_RIGHT_7 = 7;
 export const CELL_GEN_MOVE = 8; // move forward/eat and end prog
 export const CELL_GEN_PHOTOSYNTHESIS = 9; // photosynthesis ++cursor end prog
 export const CELL_GEN_DIVIDE = 10; // make self copy with mutated gen at front cell
-export const CELL_GEN_DIST = 11; // move cursor to {dist to cloosest cell}*2+1 positions
-export const CELL_GEN_GOTO = 12; // cursor = {next 2 genes value as u16}
+export const CELL_GEN_DIST = 11; // move cursor to {dist to closest cell}*2+1 positions
+export const CELL_GEN_VARIANT = 12; // move cursor to {closest cell variant}*2+1 positions
+export const CELL_GEN_JUMP = 13; // cursor = {next 2 genes value as u16}
 export const CELL_GEN_END = 255; // end turn
 
 export const CELL_INTENTION_WAIT = 0;

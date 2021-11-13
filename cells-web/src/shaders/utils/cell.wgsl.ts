@@ -39,6 +39,10 @@ fn getIndex(cord: vec2<i32>, gridSize: vec2<i32>) -> u32 {
   return u32(mod(cord.x, gridSize.x) + mod(cord.y, gridSize.y) * gridSize.x);
 }
 
+fn getCord(index: u32, gridSize: vec2<i32>) -> vec2<i32> {
+  return vec2<i32>(i32(index) % gridSize.x, i32(index) / gridSize.x);
+}
+
 fn getCellGen(index: u32, cursor: u32) -> u32 {
   var genes = grid.cells[index].genes;
   let clusterIndex: u32 = cursor / 4u;

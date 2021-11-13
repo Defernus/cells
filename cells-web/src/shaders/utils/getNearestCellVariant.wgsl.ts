@@ -1,8 +1,9 @@
 import { CELL_VARIANT_EMPTY } from "constants/cell";
 
-const includeGetFrontCellVariant = (): string => /* wgsl */`
+const includeGetNearestCellVariant = (): string => /* wgsl */`
 
-fn getFrontCellVariant(index: u32, gridSize: vec2<i32>) -> u32 {
+fn getNearestCellVariant(index: u32, gridSize: vec2<i32>) -> u32 {
+  let cord = getCord(index, gridSize);
   let dir = getCellDirection(index);
   let isStr = i32(dir % 2u);
   let leftDir = rotate(dir, 3 - isStr);
@@ -10,7 +11,7 @@ fn getFrontCellVariant(index: u32, gridSize: vec2<i32>) -> u32 {
   for (var dist = 0u; dist != 3u; dist = dist + 1u) {
     let dk = (dist + u32(isStr)) / 2u;
     
-    let lookAtCord = vec2<i32>(getXByDir(dir) * i32(dist + 1u), getYByDir(dir) * i32(dist + 1u));
+    let lookAtCord = vec2<i32>(getXByDir(dir) * i32(dist + 1u), getYByDir(dir) * i32(dist + 1u)) + cord;
     
     let lookAtIndex = getIndex(lookAtCord, gridSize);
     
@@ -36,4 +37,4 @@ fn getFrontCellVariant(index: u32, gridSize: vec2<i32>) -> u32 {
 
 `;
 
-export default includeGetFrontCellVariant;
+export default includeGetNearestCellVariant;

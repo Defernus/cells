@@ -7,12 +7,11 @@
   import createGridFragmentShader from "shaders/grid.fragment.wgsl";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
-    CELL_GEN_END,
-    CELL_GEN_GOTO,
-    CELL_GEN_MOVE,
+    CELL_GEN_DIVIDE,
+    CELL_GEN_PHOTOSYNTHESIS,
+    CELL_GEN_ROTATE_RIGHT_1,
     CELL_SIZE,
     CELL_VARIANT_LIFE,
-    CELL_VARIANT_WALL,
   } from "constants/cell";
   import Cell from "utils/cells/Cell";
   import Magnifier from "components/Magnifier.svelte";
@@ -132,23 +131,15 @@
 
     const plantCell = new Cell().setValues({
       variant: CELL_VARIANT_LIFE,
-      genes: [CELL_GEN_END, CELL_GEN_GOTO, 0, 0, CELL_GEN_MOVE, CELL_GEN_END, CELL_GEN_END, CELL_GEN_END, CELL_GEN_END, CELL_GEN_END],
-      stamina: 120,
+      genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS, CELL_GEN_DIVIDE],
+      stamina: 20,
       direction: 3,
-    });
-
-    const wallCell = new Cell().setValues({
-      variant: CELL_VARIANT_WALL,
     });
 
     const centerX = Math.floor(width / 2);
     const centerY = Math.floor(height / 2);
 
-    plantCell.putToGrid(initialGrid, centerX - 5, centerY, width);
-
-    for (let i = 0; i != 10; ++i) {
-      wallCell.putToGrid(initialGrid, centerX, centerY + i - 5, width);
-    }
+    plantCell.putToGrid(initialGrid, centerX + 2, centerY - 3, width);
 
     const actionsLayout = device.createPipelineLayout({
       bindGroupLayouts: [device.createBindGroupLayout({

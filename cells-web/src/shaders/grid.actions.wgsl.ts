@@ -1,5 +1,4 @@
 import {
-  CELL_GENES_TO_PROCESS,
   CELL_GEN_MOVE,
   CELL_GEN_PHOTOSYNTHESIS,
   CELL_GEN_ROTATE_RIGHT_1,
@@ -20,11 +19,14 @@ import {
   CELL_GEN_DIVIDE,
   CELL_STAMINA_DIVISION_MIN,
   CELL_GEN_DIST,
-  CELL_GEN_GOTO,
+  CELL_GEN_JUMP,
   CELL_GENES_SIZE,
+  CELL_GEN_VARIANT,
+  CELL_GENES_TO_PROCESS,
 } from "constants/cell";
 import { includeCellSetters, includeCellGetters, includeGrid } from "shaders/utils/cell.wgsl";
 import includeGetCellDist from "shaders/utils/getCellDist.wgsl";
+import includeGetNearestCellVariant from "shaders/utils/getNearestCellVariant.wgsl";
 import includeRandom from "shaders/utils/random.wgsl";
 
 interface Props {
@@ -43,6 +45,7 @@ ${includeRandom({ binding: 1 })}
 ${includeCellGetters()}
 ${includeCellSetters()}
 ${includeGetCellDist()}
+${includeGetNearestCellVariant()}
 
 [[stage(compute), workgroup_size(8, 8)]]
 fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
@@ -126,12 +129,6 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       newStamina = newStamina + ${CELL_STAMINA_PHOTOSYNTHESIS};
       break;
     }
-    if (gen == ${CELL_GEN_GOTO}u) {
-      let g1 = getCellGen(index, (getCellCursor(index) + 1u) % ${CELL_GENES_SIZE}u);
-      let g2 = getCellGen(index, (getCellCursor(index) + 2u) % ${CELL_GENES_SIZE}u);
-      setCellCursor(index, ((g2 << 8u) | g1) % ${CELL_GENES_SIZE}u);
-      continue;
-    }
     if (gen == ${CELL_GEN_DIVIDE}u) {
       if (newStamina < ${CELL_STAMINA_DIVISION_MIN}) {
         continue;
@@ -146,7 +143,17 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       break;
     }
     if (gen == ${CELL_GEN_DIST}u) {
-      addCellCursor(index, getCellDist(index, gridSize) * 2u);
+      addCellCursor(index, getCellDist(index, gridSize) * 3u);
+      continue;
+    }
+    if (gen == ${CELL_GEN_VARIANT}u) {
+      addCellCursor(index, getNearestCellVariant(index, gridSize) * 3u);
+      continue;
+    }
+    if (gen == ${CELL_GEN_JUMP}u) {
+      let g1 = getCellGen(index, (getCellCursor(index) + 1u) % ${CELL_GENES_SIZE}u);
+      let g2 = getCellGen(index, (getCellCursor(index) + 2u) % ${CELL_GENES_SIZE}u);
+      setCellCursor(index, ((g2 << 8u) | g1) % ${CELL_GENES_SIZE}u);
       continue;
     }
     if (gen == ${CELL_GEN_END}u) {
@@ -155,7 +162,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
   }
 
   if (newStamina <= 0) {
-    grid.cells[index] = Cell();
+    setCellVariant(index, ${CELL_VARIANT_FOOD}u);
   } else {
     setCellStamina(index, u32(newStamina));
   }

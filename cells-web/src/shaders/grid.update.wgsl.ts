@@ -71,14 +71,14 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
         if (variant == ${CELL_VARIANT_EMPTY}u) {
           grid.cells[currentIndex] = grid.cells[nIndex];
           grid.cells[nIndex] = Cell();
-          addCellCursor(nIndex, 4u);
+          addCellCursor(nIndex, 6u);
           continue;
         }
         if (variant == ${CELL_VARIANT_FOOD}u) {
           addCellPredatorPoint(nIndex, ${CELL_STAMINA_EAT});
           setCellStamina(nIndex, getCellStamina(nIndex) + ${CELL_STAMINA_EAT}u);
           grid.cells[currentIndex] = Cell();
-          addCellCursor(nIndex, 2u);
+          addCellCursor(nIndex, 3u);
           continue;
         }
         continue;
@@ -95,7 +95,7 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
           }
           setCellStamina(currentIndex, u32(newStamina));
 
-          addCellCursor(nIndex, 2u);
+          addCellCursor(nIndex, 3u);
           continue;
         }
         continue;
