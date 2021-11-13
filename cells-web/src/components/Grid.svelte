@@ -7,6 +7,7 @@
   import createGridFragmentShader from "shaders/grid.fragment";
   import GridBuffersData from "utils/gpu/GridBuffersData";
   import {
+CELL_GEN_DIVIDE,
     CELL_GEN_PHOTOSYNTHESIS,
     CELL_GEN_ROTATE_RIGHT_1,
     CELL_SIZE,
@@ -121,7 +122,7 @@
 
     const plantCell = new Cell().setValues({
       variant: CELL_VARIANT_LIFE,
-      genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS],
+      genes: [CELL_GEN_ROTATE_RIGHT_1, CELL_GEN_PHOTOSYNTHESIS, CELL_GEN_DIVIDE],
       stamina: 16,
       direction: 3,
     });

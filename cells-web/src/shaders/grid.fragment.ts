@@ -7,10 +7,11 @@ interface Props {
   device: GPUDevice;
 }
 
-const createGridFragmentShader = ({ device, width, height }: Props): GPUShaderModule => device.createShaderModule({
-  code: /* wgsl */ `
+const createGridFragmentShader = (props: Props): GPUShaderModule => {
+  const { device, width, height } = props;
+  const code = /* wgsl */ `
 
-${includeGrid()}
+${includeGrid({ binding: 0 })}
 ${includeCellGetters()}
 
 [[stage(fragment)]]
@@ -51,6 +52,8 @@ fn main([[location(0)]] fragUV: vec2<f32>) -> [[interpolate(flat), location(0)]]
   return getCellColor(index);
 }
   
-`});
+  `;
 
+  return device.createShaderModule({ code });
+};
 export default createGridFragmentShader;

@@ -15,6 +15,7 @@ export const CELL_GEN_ROTATE_RIGHT_6 = 6;
 export const CELL_GEN_ROTATE_RIGHT_7 = 7;
 export const CELL_GEN_MOVE = 8;
 export const CELL_GEN_PHOTOSYNTHESIS = 9;
+export const CELL_GEN_DIVIDE = 10;
 export const CELL_GEN_END = 255;
 
 export const CELL_INTENTION_WAIT = 0;

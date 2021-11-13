@@ -21,8 +21,8 @@ const createGridUpdateShader = (props: Props): GPUShaderModule => {
 
   const code = /* wgsl */`
 
-${includeGrid()}
-${includeRandom()}
+${includeGrid({ binding: 0 })}
+${includeRandom({ binding: 1 })}
 ${includeCellGetters()}
 ${includeCellSetters()}
 

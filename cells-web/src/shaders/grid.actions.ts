@@ -18,6 +18,8 @@ import {
   CELL_GEN_END,
   CELL_STAMINA_EAT,
   CELL_INTENTION_HIT,
+  CELL_GEN_DIVIDE,
+  CELL_STAMINA_DIVISION_MIN,
 } from "constants/cell";
 import { includeCellSetters, includeCellGetters, includeGrid } from "shaders/utils/cell";
 import includeRandom from "shaders/utils/random";
@@ -33,8 +35,8 @@ const createGridActionsShader = (props: Props): GPUShaderModule => {
 
   const code = /* wgsl */`
 
-${includeGrid()}
-${includeRandom()}
+${includeGrid({ binding: 0 })}
+${includeRandom({ binding: 1 })}
 ${includeCellGetters()}
 ${includeCellSetters()}
 
@@ -90,19 +92,19 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
     if (gen == ${CELL_GEN_MOVE}u) {
       newStamina = newStamina + ${CELL_STAMINA_MOVEMENT};
       let lookAtIndex = getIndex(getCellLookAt(index) + cord, gridSize);
-      let laVariant = getCellVariant(lookAtIndex);
+      let lookAtVariant = getCellVariant(lookAtIndex);
       cursor = cursor + 1u;
-      if (laVariant == ${CELL_VARIANT_EMPTY}u) {
+      if (lookAtVariant == ${CELL_VARIANT_EMPTY}u) {
         setCellIntention(index, ${CELL_INTENTION_MOVE}u);
         break;
       }
-      if (laVariant == ${CELL_VARIANT_FOOD}u) {
+      if (lookAtVariant == ${CELL_VARIANT_FOOD}u) {
         addCellPredatorPoint(index, ${CELL_STAMINA_EAT});
         newStamina = newStamina + ${CELL_STAMINA_EAT};
         grid.cells[lookAtIndex] = Cell();
         break;
       }
-      if (laVariant == ${CELL_VARIANT_LIFE}u) {
+      if (lookAtVariant == ${CELL_VARIANT_LIFE}u) {
         let lookAtStamina = i32(getCellStamina(lookAtIndex));
         let hit = i32(newStamina) / 2 + 1;
         let newLAStamina = lookAtStamina - hit;
@@ -120,6 +122,17 @@ fn main([[builtin(global_invocation_id)]] global_id: vec3<u32>) {
       addCellPlantPoint(index, ${CELL_STAMINA_PHOTOSYNTHESIS});
       cursor = cursor + 1u;
       newStamina = newStamina + ${CELL_STAMINA_PHOTOSYNTHESIS};
+      break;
+    }
+    if (gen == ${CELL_GEN_DIVIDE}u && newStamina > ${CELL_STAMINA_DIVISION_MIN}) {
+      cursor = cursor + 1u;
+      let lookAtCord = getCellLookAt(index) + cord;
+      let lookAtIndex = getIndex(lookAtCord, gridSize);
+      if (getCellVariant(lookAtIndex) != ${CELL_VARIANT_EMPTY}u) {
+        setCellVariant(index, ${CELL_VARIANT_FOOD}u);
+        return;
+      }
+      setCellIntention(index, ${CELL_INTENTION_DIVISION}u);
       break;
     }
     if (gen == ${CELL_GEN_END}u) {

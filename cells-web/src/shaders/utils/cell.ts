@@ -11,7 +11,11 @@ import { cellStructure } from "utils/cells/Cell";
 
 const cellProps = Object.entries(cellStructure).map(([name, { wgslType }]) => `${name}: ${wgslType};`);
 
-export const includeGrid = (): string => /* wgsl */`
+interface Props {
+  binding: number;
+}
+
+export const includeGrid = ({ binding }: Props): string => /* wgsl */`
 
 struct Cell {
   ${cellProps.join("\n  ")}
@@ -21,7 +25,7 @@ struct Cell {
   cells: array<Cell>;
 };
 
-[[group(0), binding(0)]] var<storage, write> grid: Grid;
+[[group(0), binding(${binding})]] var<storage, write> grid: Grid;
 
 `;
 
